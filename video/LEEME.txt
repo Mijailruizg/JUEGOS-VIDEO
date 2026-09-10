@@ -1,0 +1,28 @@
+Carpeta /video
+================
+
+Las páginas (index.html y juegos.html) ya están enlazadas a los siguientes
+nombres de archivo. Coloca aquí los tráilers reales con EXACTAMENTE estos
+nombres para que se reproduzcan automáticamente:
+
+  zelda-totk.mp4
+  elden-ring.mp4
+  cyberpunk-2077.mp4
+  hades.mp4
+  god-of-war-ragnarok.mp4
+  minecraft.mp4
+
+Cómo conseguir los tráilers:
+- Descarga el tráiler oficial desde el canal de YouTube del estudio/publisher
+  (Nintendo, Bandai Namco, CD Projekt Red, Supergiant Games, PlayStation,
+  Mojang) usando una herramienta de descarga o el propio botón de descarga
+  si el canal lo permite.
+- Recorta un fragmento corto (15-30 segundos) con cualquier editor de video
+  para que el archivo no pese demasiado.
+- Guarda el archivo en formato .mp4 dentro de esta carpeta con el nombre
+  exacto de la lista de arriba.
+
+Si prefieres usar YouTube embebido en vez de archivos locales, puedes
+reemplazar la etiqueta <video>...</video> de cada tarjeta en index.html o
+juegos.html por un <iframe> apuntando al enlace del tráiler oficial en
+YouTube.

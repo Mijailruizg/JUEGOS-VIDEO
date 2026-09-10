@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelVerse Games — Noticias</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="logo">PixelVerse Games</a>
+  <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="main-nav" id="mainNav">
+    <ul>
+      <li><a href="index.html">Inicio</a></li>
+      <li><a href="juegos.html">Juegos</a></li>
+      <li><a href="noticias.html" class="active">Noticias</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <h2 class="section-title">Noticias</h2>
+  <p class="section-sub">Lo último del mundo gamer: lanzamientos, actualizaciones y anuncios.</p>
+
+  <article class="news-item">
+    <img src="https://placehold.co/500x300/1d1832/ec4899?text=Zelda+TOTK" alt="Zelda Tears of the Kingdom">
+    <div>
+      <p class="news-date">Nintendo</p>
+      <h3>Tears of the Kingdom sigue rompiendo récords de ventas</h3>
+      <p>La secuela de Breath of the Wild continúa entre los juegos más vendidos de Switch, gracias a la libertad que ofrece su sistema de construcción y su mundo ampliado hacia los cielos e Hyrule subterráneo.</p>
+    </div>
+  </article>
+
+  <article class="news-item">
+    <img src="https://placehold.co/500x300/1d1832/a742f5?text=Elden+Ring" alt="Elden Ring">
+    <div>
+      <p class="news-date">FromSoftware</p>
+      <h3>La comunidad de Elden Ring sigue creciendo con sus expansiones</h3>
+      <p>El RPG de acción de FromSoftware mantiene una base de jugadores muy activa gracias a su modo cooperativo, sus jefes desafiantes y el contenido adicional lanzado tras su estreno.</p>
+    </div>
+  </article>
+
+  <article class="news-item">
+    <img src="https://placehold.co/500x300/1d1832/7b2ff7?text=Cyberpunk+2077" alt="Cyberpunk 2077">
+    <div>
+      <p class="news-date">CD Projekt Red</p>
+      <h3>Cyberpunk 2077 se consolida tras años de mejoras</h3>
+      <p>Después de varias actualizaciones importantes, Night City es hoy uno de los mundos abiertos más elogiados por su ambientación, su historia y las decisiones que afectan el destino de V.</p>
+    </div>
+  </article>
+
+  <article class="news-item">
+    <img src="https://placehold.co/500x300/1d1832/ec4899?text=Hades" alt="Hades">
+    <div>
+      <p class="news-date">Supergiant Games</p>
+      <h3>Hades sigue siendo referencia del género roguelike</h3>
+      <p>Su combinación de narrativa progresiva y combate ágil lo mantiene como uno de los títulos independientes más recomendados por la crítica y los propios jugadores.</p>
+    </div>
+  </article>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 PixelVerse Games — Actividad académica, sin fines comerciales.</p>
+  <div class="footer-links">
+    <a href="index.html">Inicio</a>
+    <a href="juegos.html">Juegos</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="contacto.html">Contacto</a>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('navToggle').addEventListener('click', function () {
+    document.getElementById('mainNav').classList.toggle('open');
+  });
+</script>
+</body>
+</html>
