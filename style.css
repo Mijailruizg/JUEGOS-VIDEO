@@ -1,15 +1,15 @@
 :root {
-  --bg-dark: #F4EBD0;
-  --bg-panel: #A6B196;
-  --bg-panel-2: #A6B196;
-  --purple: #C26D5C;
-  --purple-2: #C26D5C;
-  --pink: #C26D5C;
-  --text-main: #464F38;
-  --text-muted: #464F38;
-  --border: #464F38;
+  --bg-dark: #051A0A;
+  --bg-panel: #113318;
+  --bg-panel-2: #113318;
+  --purple: #39FF14;
+  --purple-2: #39FF14;
+  --pink: #39FF14;
+  --text-main: #E8FF8C;
+  --text-muted: #E8FF8C;
+  --border: #39FF14;
   --radius: 8px;
-  --shadow: 0 8px 30px rgba(70, 79, 56, 0.15);
+  --shadow: 0 8px 30px rgba(57, 255, 20, 0.15);
   font-size: 16px;
 }
 
