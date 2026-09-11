@@ -1,0 +1,7 @@
+# Editor / IDE
+.vscode/
+.agents/
+
+# System
+.DS_Store
+Thumbs.db

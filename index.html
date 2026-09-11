@@ -3,701 +3,2863 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelVerse Games — Inicio</title>
-<link rel="stylesheet" href="style.css">
+<title>PixelVerse Games — Experiencia Web Experimental</title>
+<meta name="description" content="Portal inmersivo de videojuegos con 8 minijuegos interactivos, tráilers destacados, noticias gamer y experiencia visual 3D reactiva al scroll.">
+
+<!-- Google Fonts (UI/UX Pro Max: Chakra Petch + Bebas Neue + Space Grotesk + Inter) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:ital,wght@0,300;0,400;0,600;0,700;1,700&family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Librerías Principales: GSAP 3.12, ScrollTrigger, Lenis, Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+
+<style>
+  /* ==========================================================================
+     UI/UX PRO MAX DESIGN SYSTEM TOKENS & MASTER CSS
+     Estilo: 3D Hyperrealism & Editorial Experimental Gaming
+     ========================================================================== */
+  :root {
+    --bg-dark: #070612;
+    --bg-space: #0b091a;
+    --bg-panel: rgba(18, 15, 38, 0.72);
+    --bg-panel-solid: #15122c;
+    --bg-card: rgba(24, 20, 50, 0.65);
+    
+    /* Neón y Acentos Futuristas */
+    --cyan: #00f0ff;
+    --cyan-glow: rgba(0, 240, 255, 0.35);
+    --violet: #9d4edd;
+    --violet-glow: rgba(157, 78, 221, 0.35);
+    --rose: #ff2a85;
+    --rose-glow: rgba(255, 42, 133, 0.38);
+    --amber: #ffbe0b;
+    
+    /* Tipografía y Textos */
+    --text-pure: #ffffff;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    
+    --border-subtle: rgba(148, 163, 184, 0.14);
+    --border-neon: rgba(0, 240, 255, 0.28);
+    --border-active: rgba(255, 42, 133, 0.45);
+    
+    --font-display: 'Bebas Neue', 'Chakra Petch', sans-serif;
+    --font-tech: 'Chakra Petch', sans-serif;
+    --font-code: 'Space Grotesk', monospace;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-full: 9999px;
+  }
+
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: auto;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+  }
+
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    overflow-x: hidden;
+    position: relative;
+    selection-background-color: var(--rose);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--rose);
+    color: #fff;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* Canvas Three.js de Fondo Fijo */
+  #webgl-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+  }
+
+  /* Retícula de fondo editorial y ruido sutil */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+
+  /* Glow seguidor del mouse */
+  .cursor-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.12) 0%, rgba(157, 78, 221, 0.06) 45%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+
+  /* Contenedor maestro con perspectiva 3D */
+  .viewport-container {
+    position: relative;
+    z-index: 10;
+    perspective: 1400px;
+    perspective-origin: 50% 50%;
+  }
+
+  /* Technical HUD Corner Markers */
+  .hud-tag {
+    font-family: var(--font-tech);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+  }
+  .hud-tag::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  /* Telemetría fija en el borde de la pantalla */
+  .viewport-telemetry {
+    position: fixed;
+    bottom: 24px;
+    left: 28px;
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    pointer-events: none;
+    letter-spacing: 0.08em;
+  }
+  .viewport-telemetry .telemetry-val {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+  .scroll-meter {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--rose));
+    z-index: 100;
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  /* ==========================================================================
+     NAVEGACIÓN PREMIUM
+     ========================================================================== */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 6vw;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  nav.scrolled {
+    background: rgba(7, 6, 18, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 14px 6vw;
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .brand {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-pure);
+  }
+  .brand .brand-logo-gem {
+    width: 12px;
+    height: 12px;
+    background: var(--cyan);
+    transform: rotate(45deg);
+    box-shadow: 0 0 16px var(--cyan);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .brand:hover .brand-logo-gem {
+    transform: rotate(225deg) scale(1.2);
+    box-shadow: 0 0 20px var(--rose);
+    background: var(--rose);
+  }
+  .nav-links {
+    display: flex;
+    gap: 2.4rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--font-tech);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    position: relative;
+    padding: 6px 0;
+    transition: color 0.3s ease;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--rose));
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--text-pure);
+  }
+  .nav-links a:hover::after, .nav-links a.active::after {
+    width: 100%;
+  }
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-pure);
+    font-size: 1.8rem;
+  }
+
+  /* ==========================================================================
+     HERO SECTION CON PARTICIONADO 3D
+     ========================================================================== */
+  .hero {
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 0 6vw;
+    transform-style: preserve-3d;
+  }
+  .hero-inner {
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    max-width: 1050px;
+    margin: 0 auto;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-tech);
+    font-size: 0.85rem;
+    letter-spacing: 0.24em;
+    color: var(--cyan);
+    margin-bottom: 1.6rem;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.8rem, 11vw, 9.5rem);
+    line-height: 0.96;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-pure);
+    margin-bottom: 1.5rem;
+    transform-style: preserve-3d;
+  }
+  .hero h1 .ch {
+    display: inline-block;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+  }
+  .hero p {
+    font-size: clamp(1rem, 1.8vw, 1.25rem);
+    color: var(--text-muted);
+    max-width: 650px;
+    margin: 0 auto 2.6rem;
+    font-weight: 400;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* Botones Premium UI/UX Pro Max */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 38px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--rose) 0%, #ff4d9d 100%);
+    color: #fff;
+    font-family: var(--font-tech);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: none;
+    box-shadow: 0 10px 35px var(--rose-glow), 0 0 0 1px rgba(255, 42, 133, 0.4);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary:hover {
+    transform: scale(1.07) translateY(-3px);
+    box-shadow: 0 18px 50px rgba(255, 42, 133, 0.55), 0 0 25px rgba(0, 240, 255, 0.4);
+  }
+  .btn-primary:active {
+    transform: scale(0.96) translateY(1px);
+  }
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 36px;
+    border-radius: var(--radius-full);
+    background: rgba(18, 15, 38, 0.6);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    font-family: var(--font-tech);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-neon);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .btn-outline:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 30px var(--cyan-glow);
+    transform: scale(1.05) translateY(-2px);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-tech);
+    font-size: 0.76rem;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .scroll-cue .cue-line {
+    width: 2px;
+    height: 42px;
+    background: linear-gradient(to bottom, var(--cyan), transparent);
+    animation: pulseScroll 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  @keyframes pulseScroll {
+    0% { transform: scaleY(0); transform-origin: top; opacity: 0; }
+    50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+    51% { transform: scaleY(1); transform-origin: bottom; opacity: 1; }
+    100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+  }
+
+  /* ==========================================================================
+     ESCENA PINNED DE DESTRUCCIÓN & METAMORFOSIS 3D
+     (0% a 100% Scrub, Pin de 2600px)
+     ========================================================================== */
+  .destroy-stage-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at center, rgba(20, 15, 45, 0.4) 0%, transparent 70%);
+  }
+  .destroy-pin-container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    perspective: 1400px;
+  }
+  .sculpture-assembly {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    height: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* Anillo Holográfico Orbital */
+  .quantum-ring {
+    position: absolute;
+    width: 620px;
+    height: 620px;
+    border-radius: 50%;
+    border: 2px dashed rgba(0, 240, 255, 0.35);
+    box-shadow: inset 0 0 40px rgba(0, 240, 255, 0.08), 0 0 50px rgba(157, 78, 221, 0.15);
+    transform-style: preserve-3d;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .quantum-ring::before, .quantum-ring::after {
+    content: '';
+    position: absolute;
+    inset: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 42, 133, 0.25);
+  }
+
+  /* Monolito Gamer Central y Shards 3D */
+  .shard-matrix {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform-style: preserve-3d;
+  }
+  .shard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    background: linear-gradient(135deg, rgba(24, 20, 50, 0.88), rgba(12, 10, 28, 0.95));
+    border: 1px solid var(--border-neon);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 240, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Título Monumental de la Escena Pinned */
+  .destroy-title-wrap {
+    position: relative;
+    z-index: 10;
+    transform-style: preserve-3d;
+    width: 100%;
+    max-width: 1050px;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .destroy-kicker {
+    font-family: var(--font-tech);
+    font-size: clamp(0.78rem, 1.3vw, 0.95rem);
+    letter-spacing: 0.25em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 1.1rem;
+    will-change: transform, opacity;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    padding: 7px 22px;
+    border-radius: var(--radius-full);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+    display: inline-block;
+  }
+  .destroy-headline {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 7.6vw, 6.8rem);
+    letter-spacing: clamp(0.04em, 1.1vw, 0.12em);
+    line-height: 1;
+    color: var(--text-pure);
+    text-shadow: 0 0 35px rgba(0, 240, 255, 0.5), 0 0 65px rgba(157, 78, 221, 0.35);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    transform-style: preserve-3d;
+    margin: 0.2rem 0 0.8rem;
+  }
+  .destroy-headline .ch {
+    display: inline-block;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    white-space: nowrap !important;
+  }
+  .destroy-caption {
+    font-family: var(--font-tech);
+    font-size: clamp(0.95rem, 1.5vw, 1.22rem);
+    color: var(--text-muted);
+    max-width: 660px;
+    margin: 1.2rem auto 0;
+    line-height: 1.6;
+    will-change: transform, opacity;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+  }
+
+  /* Telemetría Flotante Satélite */
+  .satellite-badge {
+    position: absolute;
+    padding: 8px 16px;
+    background: rgba(18, 15, 38, 0.85);
+    border: 1px solid var(--border-neon);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    will-change: transform, opacity;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .satellite-badge.badge-tl { top: 15%; left: 8%; }
+  .satellite-badge.badge-tr { top: 18%; right: 8%; }
+  .satellite-badge.badge-bl { bottom: 18%; left: 12%; }
+  .satellite-badge.badge-br { bottom: 15%; right: 12%; }
+
+  /* Debris / Escombros cuánticos que salen despedidos */
+  .kinetic-debris {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    border-radius: 2px;
+  }
+
+  /* ==========================================================================
+     SECCIONES PRINCIPALES Y CABECERAS
+     ========================================================================== */
+  section {
+    position: relative;
+    padding: 9rem 6vw;
+    z-index: 10;
+  }
+  .section-head {
+    max-width: 780px;
+    margin-bottom: 4rem;
+    transform-style: preserve-3d;
+  }
+  .section-head .kicker {
+    font-family: var(--font-tech);
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.8rem;
+    will-change: transform, opacity;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 4.4rem);
+    line-height: 1.02;
+    letter-spacing: 0.02em;
+    color: var(--text-pure);
+    text-transform: uppercase;
+    display: flex;
+    flex-wrap: wrap;
+    transform-style: preserve-3d;
+  }
+  .section-head h2 .ch {
+    display: inline-block;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+  }
+  .section-head p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 1.2rem;
+    max-width: 620px;
+    line-height: 1.6;
+    will-change: transform, opacity;
+  }
+
+  /* ==========================================================================
+     TRÁILERS DESTACADOS (VIDEO CARDS CON TILT 3D)
+     ========================================================================== */
+  #trailers {
+    background: linear-gradient(180deg, transparent 0%, rgba(18, 15, 38, 0.4) 20%, rgba(18, 15, 38, 0.4) 80%, transparent 100%);
+  }
+  .trailer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.2rem;
+    perspective: 1400px;
+  }
+  .trailer-card {
+    background: linear-gradient(165deg, rgba(28, 22, 58, 0.75) 0%, rgba(14, 11, 32, 0.85) 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    transform-style: preserve-3d;
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+    will-change: transform;
+  }
+  .trailer-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    padding: 1px;
+    background: linear-gradient(135deg, var(--rose) 0%, transparent 40%, var(--cyan) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .trailer-card:hover {
+    border-color: transparent;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(0, 240, 255, 0.2);
+  }
+  .trailer-card:hover::before {
+    opacity: 1;
+  }
+  .card-tags {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-family: var(--font-tech);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    text-transform: uppercase;
+  }
+  .tag.alt {
+    background: rgba(255, 42, 133, 0.1);
+    color: var(--rose);
+    border-color: rgba(255, 42, 133, 0.35);
+  }
+  .trailer-card h3 {
+    font-family: var(--font-tech);
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.8rem;
+    color: var(--text-pure);
+  }
+  .trailer-card p {
+    color: var(--text-muted);
+    font-size: 0.94rem;
+    line-height: 1.6;
+    margin-bottom: 1.4rem;
+  }
+  .video-frame-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    background: #000;
+  }
+  .video-frame-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  /* ==========================================================================
+     8 MINIJUEGOS ARCADE (CONSOLA FUTURISTA CON PRESERVACIÓN TOTAL)
+     ========================================================================== */
+  #juegos {
+    background: var(--bg-dark);
+  }
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2.2rem;
+    perspective: 1400px;
+  }
+  .game-card {
+    background: linear-gradient(170deg, rgba(26, 21, 54, 0.8) 0%, rgba(13, 10, 30, 0.9) 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.8rem;
+    backdrop-filter: blur(14px);
+    transform-style: preserve-3d;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+  }
+  .game-card:hover {
+    border-color: var(--border-neon);
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.65), 0 0 35px var(--cyan-glow);
+  }
+  .game-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+  }
+  .game-card h3 {
+    font-family: var(--font-tech);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--text-pure);
+  }
+  .game-index-badge {
+    font-family: var(--font-code);
+    font-size: 0.78rem;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+  }
+  .game-card .desc {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+    min-height: 2.8rem;
+  }
+  .canvas-wrapper {
+    background: #04030a;
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .game-card canvas {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    aspect-ratio: 1;
+    background: #04030a;
+    touch-action: none;
+  }
+
+  /* Controles y botones del juego */
+  .game-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+  }
+  .diff-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-tech);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+  .diff-btn:hover, .diff-btn.active {
+    background: rgba(0, 240, 255, 0.12);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 15px var(--cyan-glow);
+  }
+  .play-btn {
+    background: linear-gradient(135deg, var(--cyan) 0%, #00b4d8 100%);
+    color: #070612;
+    border: none;
+    padding: 10px 22px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-tech);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: auto;
+    box-shadow: 0 6px 20px var(--cyan-glow);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .play-btn:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 240, 255, 0.6);
+  }
+  .play-btn:active {
+    transform: scale(0.94);
+  }
+  .score-line {
+    font-family: var(--font-code);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border-subtle);
+  }
+  .score-line b {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  /* Tic Tac Toe Board */
+  .ttt-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 1;
+    margin: 10px auto;
+  }
+  .ttt-cell {
+    background: #0a0818;
+    border: 1px solid var(--border-neon);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    color: var(--cyan);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .ttt-cell:hover {
+    background: rgba(0, 240, 255, 0.1);
+    border-color: var(--cyan);
+  }
+  .ttt-status {
+    font-family: var(--font-tech);
+    text-align: center;
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    margin: 0.6rem 0;
+  }
+
+  /* ==========================================================================
+     NOTICIAS Y CONTACTO
+     ========================================================================== */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    perspective: 1400px;
+  }
+  .news-card {
+    background: linear-gradient(160deg, rgba(26, 21, 54, 0.7) 0%, rgba(13, 10, 30, 0.85) 100%);
+    border: 1px solid var(--border-subtle);
+    border-top: 3px solid var(--rose);
+    border-radius: var(--radius-md);
+    padding: 1.8rem;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+  }
+  .news-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-neon);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 25px var(--rose-glow);
+  }
+  .news-card .studio {
+    font-family: var(--font-tech);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .news-card h3 {
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 1.35rem;
+    line-height: 1.3;
+    margin: 0.6rem 0 0.8rem;
+    color: var(--text-pure);
+  }
+  .news-card p {
+    color: var(--text-muted);
+    font-size: 0.94rem;
+    line-height: 1.6;
+  }
+
+  /* Contacto */
+  #contacto {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 4.5rem;
+    align-items: start;
+  }
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    background: rgba(20, 16, 42, 0.7);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.4rem;
+    backdrop-filter: blur(14px);
+  }
+  .contact-form input, .contact-form textarea {
+    background: rgba(10, 8, 22, 0.8);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    color: var(--text-pure);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .contact-form input:focus, .contact-form textarea:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px var(--cyan-glow);
+  }
+  .contact-form textarea {
+    min-height: 140px;
+    resize: vertical;
+  }
+  .form-msg {
+    font-family: var(--font-tech);
+    font-size: 0.9rem;
+    color: var(--cyan);
+    min-height: 1.4rem;
+  }
+
+  footer {
+    padding: 3rem 6vw;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--font-code);
+    font-size: 0.84rem;
+    border-top: 1px solid var(--border-subtle);
+    background: rgba(7, 6, 18, 0.95);
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ==========================================================================
+     RESPONSIVE DESIGN & ACCESSIBILITY
+     ========================================================================== */
+  @media (max-width: 960px) {
+    #contacto {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+    .satellite-badge {
+      display: none;
+    }
+    .quantum-ring {
+      width: 440px;
+      height: 440px;
+    }
+    .nav-links {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      height: 100vh;
+      width: 75%;
+      max-width: 320px;
+      background: rgba(7, 6, 18, 0.98);
+      backdrop-filter: blur(20px);
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 2rem;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      gap: 2.2rem;
+      border-left: 1px solid var(--border-subtle);
+    }
+    .nav-links.open {
+      right: 0;
+    }
+    .nav-toggle {
+      display: block;
+      z-index: 90;
+    }
+  }
+
+  @media (max-width: 640px) {
+    section {
+      padding: 5.5rem 5vw;
+    }
+    .destroy-stage-section {
+      height: auto;
+      min-height: 85vh;
+      padding: 4rem 5vw;
+    }
+    .destroy-pin-container {
+      height: auto;
+    }
+    .quantum-ring {
+      display: none;
+    }
+    .viewport-telemetry {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto !important;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+    #webgl-canvas {
+      display: none;
+    }
+  }
+</style>
 </head>
 <body>
 
-<header class="site-header">
-  <a href="index.html" class="logo">PixelVerse Games</a>
-  <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
-    <span></span><span></span><span></span>
-  </button>
-  <nav class="main-nav" id="mainNav">
-    <ul>
-      <li><a href="#" class="active">Inicio</a></li>
-      <li><a href="#trailers">Tráilers</a></li>
-      <li><a href="#juegos">Juegos</a></li>
-      <li><a href="#noticias">Noticias</a></li>
-      <li><a href="#contacto">Contacto</a></li>
-    </ul>
-  </nav>
-</header>
+<!-- Three.js 3D WebGL Background Spatial Canvas -->
+<canvas id="webgl-canvas" role="img" aria-label="Fondo 3D interactivo con nebulosa de partículas cósmicas y prismas flotantes reactivos al scroll"></canvas>
 
-<section class="hero">
-  <div class="hero-content">
-    <p class="hero-tag">Publicidad de videojuegos</p>
-    <h1 class="hero-title">Los mejores juegos, en un solo lugar</h1>
-    <p class="hero-desc">Reseñas, tráilers y noticias de los títulos más esperados. Explora nuestro catálogo y entérate de lo último en el mundo gamer.</p>
-    <a href="juegos.html" class="btn btn-primary">Ver juegos</a>
+<!-- Retícula técnica y medidor de scroll -->
+<div class="grid-overlay"></div>
+<div class="scroll-meter" id="scrollMeter"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- Telemetría HUD -->
+<div class="viewport-telemetry">
+  <span>SYS // <span class="telemetry-val">PIXELVERSE 2.0</span></span>
+  <span>FPS // <span class="telemetry-val" id="fpsCounter">60</span></span>
+  <span>SCROLL // <span class="telemetry-val" id="scrollPercent">0%</span></span>
+</div>
+
+<!-- NAVEGACIÓN -->
+<nav id="nav">
+  <div class="brand">
+    <span class="brand-logo-gem"></span>
+    <span>PixelVerse</span>
   </div>
-</section>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#inicio" class="nav-link active">Inicio</a></li>
+    <li><a href="#destruye" class="nav-link">Metamorfosis</a></li>
+    <li><a href="#trailers" class="nav-link">Tráilers</a></li>
+    <li><a href="#juegos" class="nav-link">Juegos</a></li>
+    <li><a href="#noticias" class="nav-link">Noticias</a></li>
+    <li><a href="#contacto" class="nav-link">Contacto</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle" aria-label="Menú de navegación">☰</button>
+</nav>
 
-<main>
-  <section id="trailers" style="margin-bottom: 60px;">
-    <h2 class="section-title">Tráilers destacados</h2>
-    <p class="section-sub">Un vistazo rápido a algunos de los títulos más populares del momento.</p>
+<div class="viewport-container">
 
-    <div class="grid">
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/YHhwdyWkwTQ?rel=0" title="Crimson Desert | Tráiler oficial de presentación" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">Pearl Abyss · Acción / Mundo abierto</p>
-          <h3 class="card-title">Crimson Desert | Tráiler oficial de presentación</h3>
-          <p class="card-text">Un espectacular mundo de fantasía donde liderarás un clan de mercenarios, con combates dinámicos al estilo de los mejores juegos de acción, criaturas míticas y un apartado visual que redefine los estándares del género.</p>
-        </div>
-      </article>
-
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/MOclJJ7IpSY?rel=0" title="EA SPORTS FC™ 27 | Tráiler oficial de presentación" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">EA Sports · Fútbol</p>
-          <h3 class="card-title">EA SPORTS FC™ 27 | Tráiler oficial de presentación</h3>
-          <p class="card-text">La nueva entrega de la saga de fútbol presenta mejoras visuales, más realismo y una experiencia deportiva aún más envolvente.</p>
-        </div>
-      </article>
-
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/65Yrv8Q2bco?rel=0" title="Call of Duty: Black Ops 7 - Launch Trailer | PS5 & PS4 Games" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">Activision · FPS</p>
-          <h3 class="card-title">Call of Duty: Black Ops 7 - Launch Trailer | PS5 &amp; PS4 Games</h3>
-          <p class="card-text">Un avance explosivo con acción intensa, batalla militar y el estilo cinematográfico que caracteriza a la franquicia.</p>
-        </div>
-      </article>
-
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/STNrQHfd2LI?rel=0" title="Free Fire: Daybreak! [Tráiler del Anime] | Garena Free Fire LATAM" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">Garena · Battle Royale</p>
-          <h3 class="card-title">Free Fire: Daybreak! [Tráiler del Anime] | Garena Free Fire LATAM</h3>
-          <p class="card-text">Una presentación con estilo anime, mucha acción y una propuesta visual que se destaca por su energía y dinamismo.</p>
-        </div>
-      </article>
-
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/G62QQ42Ewwg?rel=0" title="Marvel's Wolverine Reveal Trailer" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">Insomniac Games · Acción / Aventura</p>
-          <h3 class="card-title">Marvel's Wolverine - Reveal Trailer | PS5 Games</h3>
-          <p class="card-text">Un avance que muestra al icónico mutante en un combate visceral, con la calidad visual y narrativa que caracteriza a los exclusivos de PlayStation.</p>
-        </div>
-      </article>
-
-      <article class="card">
-        <iframe src="https://www.youtube.com/embed/-TW2SnAipsE?rel=0" title="Gears of War E-Day Announce Trailer" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <div class="card-body">
-          <p class="card-meta">The Coalition · TPS / Acción</p>
-          <h3 class="card-title">Gears of War: E-Day - Announce Trailer | Xbox Series X|S &amp; PC Games</h3>
-          <p class="card-text">Un regreso épico a los orígenes de la franquicia con escenas cinematográficas, acción desenfrenada y el regreso de Marcus y Dom en los primeros días de la guerra contra los Locust.</p>
-        </div>
-      </article>
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="inicio">
+    <div class="hero-inner">
+      <div class="hero-eyebrow"><span class="hud-tag">NEXT-GEN GAMING SHOWCASE</span></div>
+      <h1 id="heroTitle">Los Mejores Juegos en un Solo Lugar</h1>
+      <p>Una experiencia web cinematográfica donde el scroll redefine cada dimensión. Descubre análisis de última generación, tráilers cinematográficos y 8 clásicos arcade listos para jugar.</p>
+      <div class="hero-actions">
+        <a href="#juegos" class="btn-primary">Explorar Minijuegos</a>
+        <a href="#destruye" class="btn-outline">Iniciar Metamorfosis</a>
+      </div>
+    </div>
+    <div class="scroll-cue">
+      <span>Desplázate</span>
+      <div class="cue-line"></div>
     </div>
   </section>
 
+  <!-- ================= ESCENA PINNED DE DESTRUCCIÓN Y RECONSTRUCCIÓN ================= -->
+  <section class="destroy-stage-section" id="destruye">
+    <div class="destroy-pin-container">
+      <div class="sculpture-assembly" id="sculptureAssembly">
+        <!-- Anillo cuántico orbital -->
+        <div class="quantum-ring" id="quantumRing"></div>
+
+        <!-- Matriz de shards geométricos -->
+        <div class="shard-matrix" id="shardMatrix"></div>
+
+        <!-- Telemetría satélite -->
+        <div class="satellite-badge badge-tl" id="badgeTL"><span>CORE</span> // <span>ONLINE</span></div>
+        <div class="satellite-badge badge-tr" id="badgeTR"><span>DEPTH</span> // <span>8K HDR</span></div>
+        <div class="satellite-badge badge-bl" id="badgeBL"><span>REFRESH</span> // <span>240HZ</span></div>
+        <div class="satellite-badge badge-br" id="badgeBR"><span>SYNC</span> // <span>100%</span></div>
+
+        <!-- Titular Monumental con Letras Separadas -->
+        <div class="destroy-title-wrap">
+          <div class="destroy-kicker" id="destroyKicker">[ FASE 01 // METAMORFOSIS CONTINUA ]</div>
+          <h2 class="destroy-headline" id="destroyHeadline">EXPERIENCIA</h2>
+          <p class="destroy-caption" id="destroyCaption">Cada avance rompe los límites de lo conocido. Lo que hoy se fragmenta, mañana reconstruye el futuro del entretenimiento interactivo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TRÁILERS ================= -->
+  <section id="trailers">
+    <div class="section-head reveal">
+      <div class="kicker"><span class="hud-tag">CINEMATICS</span> Tráilers Destacados</div>
+      <h2>Un Vistazo al Momento Gamer</h2>
+      <p>Cinemáticas oficiales de alto impacto, seleccionadas para reflejar la cúspide visual y narrativa de la industria.</p>
+    </div>
+    <div class="trailer-grid" id="trailerGrid"></div>
+  </section>
+
+  <!-- ================= JUEGOS (8 MINIJUEGOS TOTALMENTE JUGABLES) ================= -->
   <section id="juegos">
-    <h2 class="section-title">Minijuegos Retro</h2>
-    <p class="section-sub">Disfruta de estos 4 clásicos, programados directamente en HTML y JavaScript. Usa el teclado para interactuar.</p>
+    <div class="section-head reveal">
+      <div class="kicker"><span class="hud-tag">ARCADE MATRIX</span> 8 Minijuegos Integrados</div>
+      <h2>Disfruta 8 Clásicos al Instante</h2>
+      <p>Programados en JavaScript nativo sobre Canvas HTML5. Controles instantáneos de teclado y física acelerada.</p>
+    </div>
 
-    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="snakeCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px;"></canvas>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">Viborita (Snake)</h3>
-          <p class="card-text">Cómete todo en 30s. Objeto pequeño para mayor dificultad.</p>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; margin-bottom:5px;">
-            <select id="snakeDiff" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border);">
-              <option value="150">Fácil</option>
-              <option value="100" selected>Medio</option>
-              <option value="60">Difícil</option>
-            </select>
-            <span style="font-size:14px; font-weight:bold; color:var(--accent);">Récord: <span id="snakeRecord">0</span></span>
-          </div>
-          <button class="btn btn-outline" style="width:100%" onclick="initSnake()">Jugar (30s)</button>
-        </div>
-      </article>
+    <div class="games-grid">
 
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="tttCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px; cursor: pointer;"></canvas>
+      <!-- 1. Snake -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Viborita (Snake)</h3>
+          <span class="game-index-badge">01 // CLASSIC</span>
         </div>
-        <div class="card-body">
-          <h3 class="card-title">Tres en Raya</h3>
-          <p class="card-text">Juega contra un amigo. Haz clic en las casillas para colocar tu marca (X o O).</p>
-          <button class="btn btn-outline" style="margin-top:10px; width:100%" onclick="initTTT()">Reiniciar Partida</button>
+        <p class="desc">Cómete las manzanas cibernéticas en 30s sin chocar con los bordes ni contigo mismo. Flechas del teclado.</p>
+        <div class="canvas-wrapper">
+          <canvas id="snakeCanvas" width="320" height="320"></canvas>
         </div>
-      </article>
+        <div class="game-controls">
+          <button class="diff-btn active" data-game="snake" data-diff="easy">Fácil</button>
+          <button class="diff-btn" data-game="snake" data-diff="medium">Medio</button>
+          <button class="diff-btn" data-game="snake" data-diff="hard">Difícil</button>
+          <button class="play-btn" id="snakePlay">Jugar (30s)</button>
+        </div>
+        <div class="score-line">
+          <span>PUNTAJE: <b id="snakeScore">0</b></span>
+          <span>RÉCORD: <b id="snakeRecord">0</b></span>
+        </div>
+      </div>
 
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="pongCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px;"></canvas>
+      <!-- 2. Tres en Raya -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Tres en Raya</h3>
+          <span class="game-index-badge">02 // DUEL</span>
         </div>
-        <div class="card-body">
-          <h3 class="card-title">Pong</h3>
-          <p class="card-text">Usa W y S para mover tu raqueta (izquierda). La raqueta roja se mueve sola.</p>
-          <button class="btn btn-outline" style="margin-top:10px; width:100%" onclick="initPong()">Jugar Pong</button>
+        <p class="desc">Duelo táctico por turnos en cuadrícula cuántica. Haz clic en las celdas para colocar X o O.</p>
+        <div class="canvas-wrapper" style="padding:15px 0;">
+          <div class="ttt-board" id="tttBoard"></div>
         </div>
-      </article>
+        <div class="ttt-status" id="tttStatus">Turno de X</div>
+        <div class="game-controls" style="justify-content:center;">
+          <button class="play-btn" id="tttReset" style="margin-left:0;">Reiniciar Duelo</button>
+        </div>
+        <div class="score-line">
+          <span>MODO: <b>2 JUGADORES</b></span>
+          <span>ESTADO: <b>ACTIVO</b></span>
+        </div>
+      </div>
 
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="catchCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px;"></canvas>
+      <!-- 3. Pong -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Pong Quantum</h3>
+          <span class="game-index-badge">03 // RETRO</span>
         </div>
-        <div class="card-body">
-          <h3 class="card-title">Atrapa la Fruta</h3>
-          <p class="card-text">Atrapa todo lo que puedas en 30s. Frutas más pequeñas.</p>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; margin-bottom:5px;">
-            <select id="catchDiff" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border);">
-              <option value="1">Fácil</option>
-              <option value="1.5" selected>Medio</option>
-              <option value="2">Difícil</option>
-            </select>
-            <span style="font-size:14px; font-weight:bold; color:var(--accent);">Récord: <span id="catchRecord">0</span></span>
-          </div>
-          <button class="btn btn-outline" style="width:100%" onclick="initCatch()">Jugar (30s)</button>
+        <p class="desc">Usa W y S para mover tu pala cian (izquierda). La pala rosa derecha es controlada por IA reactiva.</p>
+        <div class="canvas-wrapper">
+          <canvas id="pongCanvas" width="320" height="320"></canvas>
         </div>
-      </article>
+        <div class="game-controls">
+          <button class="play-btn" id="pongPlay" style="margin-left:auto;">Iniciar Pong</button>
+        </div>
+        <div class="score-line">
+          <span>TÚ: <b id="pongScoreL">0</b></span>
+          <span>IA: <b id="pongScoreR">0</b></span>
+        </div>
+      </div>
 
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="brickCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px;"></canvas>
+      <!-- 4. Atrapa la Fruta -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Atrapa la Fruta</h3>
+          <span class="game-index-badge">04 // SPEED</span>
         </div>
-        <div class="card-body">
-          <h3 class="card-title">Destruye Ladrillos</h3>
-          <p class="card-text">Usa flechas Izquierda/Derecha para mover la barra y romper todos los bloques.</p>
-          <button class="btn btn-outline" style="margin-top:10px; width:100%" onclick="initBrick()">Jugar Ladrillos</button>
+        <p class="desc">Recolecta la energía que cae en 30s. Menor tamaño y mayor velocidad en modos altos. Flechas Izq/Der.</p>
+        <div class="canvas-wrapper">
+          <canvas id="fruitCanvas" width="320" height="320"></canvas>
         </div>
-      </article>
+        <div class="game-controls">
+          <button class="diff-btn active" data-game="fruit" data-diff="easy">Fácil</button>
+          <button class="diff-btn" data-game="fruit" data-diff="medium">Medio</button>
+          <button class="diff-btn" data-game="fruit" data-diff="hard">Difícil</button>
+          <button class="play-btn" id="fruitPlay">Atrapar (30s)</button>
+        </div>
+        <div class="score-line">
+          <span>PUNTAJE: <b id="fruitScore">0</b></span>
+          <span>RÉCORD: <b id="fruitRecord">0</b></span>
+        </div>
+      </div>
 
-      <article class="card">
-        <div style="background: var(--border); padding: 10px; display: flex; justify-content: center;">
-          <canvas id="flappyCanvas" width="280" height="280" style="background: var(--bg-dark); border: 2px solid var(--purple); border-radius: 8px;"></canvas>
+      <!-- 5. Destruye Ladrillos -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Destruye Ladrillos</h3>
+          <span class="game-index-badge">05 // BREAKER</span>
         </div>
-        <div class="card-body">
-          <h3 class="card-title">Flappy Cubo</h3>
-          <p class="card-text">Presiona Flecha Arriba o 'W' para volar. ¡Esquiva los obstáculos!</p>
-          <button class="btn btn-outline" style="margin-top:10px; width:100%" onclick="initFlappy()">Jugar Flappy Cubo</button>
+        <p class="desc">Controla la barra con flechas Izquierda/Derecha y pulveriza los módulos de neón sin perder la esfera.</p>
+        <div class="canvas-wrapper">
+          <canvas id="brickCanvas" width="320" height="320"></canvas>
         </div>
-      </article>
+        <div class="game-controls">
+          <button class="play-btn" id="brickPlay" style="margin-left:auto;">Lanzar Esfera</button>
+        </div>
+        <div class="score-line">
+          <span>VIDAS: <b id="brickLives">3</b></span>
+          <span>MÓDULOS: <b id="brickCount">0</b></span>
+        </div>
+      </div>
+
+      <!-- 6. Flappy Cubo -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Flappy Cubo</h3>
+          <span class="game-index-badge">06 // GRAVITY</span>
+        </div>
+        <p class="desc">Presiona Flecha Arriba, 'W', Espacio o clic para impulsar el cubo contra los pilares cibernéticos.</p>
+        <div class="canvas-wrapper">
+          <canvas id="flappyCanvas" width="320" height="320"></canvas>
+        </div>
+        <div class="game-controls">
+          <button class="play-btn" id="flappyPlay" style="margin-left:auto;">Volar Cubo</button>
+        </div>
+        <div class="score-line">
+          <span>PUNTAJE: <b id="flappyScore">0</b></span>
+          <span>RÉCORD: <b id="flappyRecord">0</b></span>
+        </div>
+      </div>
+
+      <!-- 7. Nave Espacial (Shooter) -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Nave Espacial</h3>
+          <span class="game-index-badge">07 // SHOOTER</span>
+        </div>
+        <p class="desc">Flechas Izq/Der o A/D para moverte. Barra espaciadora o clic continuo para aniquilar invasores estelares.</p>
+        <div class="canvas-wrapper">
+          <canvas id="shooterCanvas" width="320" height="320"></canvas>
+        </div>
+        <div class="game-controls">
+          <button class="play-btn" id="shooterPlay" style="margin-left:auto;">Despegar Nave</button>
+        </div>
+        <div class="score-line">
+          <span>ENEMIGOS: <b id="shooterScore">0</b></span>
+          <span>RÉCORD: <b id="shooterRecord">0</b></span>
+        </div>
+      </div>
+
+      <!-- 8. Esquiva Meteoros (Runner) -->
+      <div class="game-card reveal">
+        <div class="game-card-header">
+          <h3>Esquiva Meteoros</h3>
+          <span class="game-index-badge">08 // SURVIVAL</span>
+        </div>
+        <p class="desc">Usa Flechas Izq/Der o A/D para maniobrar a través de la tormenta de asteroides a hypervelocidad.</p>
+        <div class="canvas-wrapper">
+          <canvas id="dodgeCanvas" width="320" height="320"></canvas>
+        </div>
+        <div class="game-controls">
+          <button class="diff-btn active" data-game="dodge" data-diff="easy">Fácil</button>
+          <button class="diff-btn" data-game="dodge" data-diff="medium">Medio</button>
+          <button class="diff-btn" data-game="dodge" data-diff="hard">Difícil</button>
+          <button class="play-btn" id="dodgePlay">Iniciar Carrera</button>
+        </div>
+        <div class="score-line">
+          <span>TIEMPO: <b id="dodgeScore">0s</b></span>
+          <span>RÉCORD: <b id="dodgeRecord">0s</b></span>
+        </div>
+      </div>
+
     </div>
   </section>
 
-  <section id="noticias" style="margin-bottom: 60px;">
-    <h2 class="section-title">Noticias</h2>
-    <p class="section-sub">Lo último del mundo gamer: lanzamientos, actualizaciones y anuncios.</p>
-    <div class="grid">
-      <article class="card">
-        <img src="https://placehold.co/500x300/1d1832/ec4899?text=Zelda+TOTK" alt="Zelda Tears of the Kingdom" style="width:100%; border-radius:12px 12px 0 0;">
-        <div class="card-body">
-          <p class="card-meta">Nintendo</p>
-          <h3 class="card-title">Tears of the Kingdom sigue rompiendo récords</h3>
-          <p class="card-text">La secuela de Breath of the Wild continúa entre los más vendidos.</p>
-        </div>
-      </article>
-      <article class="card">
-        <img src="https://placehold.co/500x300/1d1832/a742f5?text=Elden+Ring" alt="Elden Ring" style="width:100%; border-radius:12px 12px 0 0;">
-        <div class="card-body">
-          <p class="card-meta">FromSoftware</p>
-          <h3 class="card-title">La comunidad de Elden Ring sigue creciendo</h3>
-          <p class="card-text">El RPG mantiene una base activa gracias a su modo cooperativo y expansiones.</p>
-        </div>
-      </article>
-      <article class="card">
-        <img src="https://placehold.co/500x300/1d1832/7b2ff7?text=Cyberpunk+2077" alt="Cyberpunk 2077" style="width:100%; border-radius:12px 12px 0 0;">
-        <div class="card-body">
-          <p class="card-meta">CD Projekt Red</p>
-          <h3 class="card-title">Cyberpunk 2077 se consolida tras mejoras</h3>
-          <p class="card-text">Después de varias actualizaciones, Night City brilla más que nunca.</p>
-        </div>
-      </article>
+  <!-- ================= NOTICIAS ================= -->
+  <section id="noticias">
+    <div class="section-head reveal">
+      <div class="kicker"><span class="hud-tag">NEWS DESK</span> Crónicas y Primicias</div>
+      <h2>Lo Último del Ecosistema Gamer</h2>
+      <p>Reportes de la industria, análisis de rendimiento de motores gráficos y anuncios clave de los estudios líderes.</p>
     </div>
+    <div class="news-grid" id="newsGrid"></div>
   </section>
 
-  <section id="contacto" style="margin-bottom: 60px;">
-    <h2 class="section-title">Contacto</h2>
-    <p class="section-sub">¿Tienes dudas o sugerencias? Escríbenos.</p>
-    <div style="max-width: 600px; margin: 0 auto; background: var(--bg-dark); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
-      <form id="contactForm" style="display: flex; flex-direction: column; gap: 15px;">
-        <input type="text" placeholder="Tu nombre" required style="padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
-        <input type="email" placeholder="Tu correo" required style="padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
-        <textarea placeholder="Mensaje..." rows="4" required style="padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text);"></textarea>
-        <button type="submit" class="btn btn-primary">Enviar mensaje</button>
-        <p id="formMsg" style="color: var(--accent); display:none; text-align: center;">¡Gracias! Tu mensaje fue registrado.</p>
-      </form>
+  <!-- ================= CONTACTO ================= -->
+  <section id="contacto">
+    <div class="reveal">
+      <div class="section-head" style="margin-bottom:1.6rem;">
+        <div class="kicker"><span class="hud-tag">TRANSMISSION</span> Línea Directa</div>
+        <h2>¿Dudas, Prensa o Colaboraciones?</h2>
+        <p>Nuestro canal de enlace está siempre activo. Envía tu consulta técnica o propuesta de cobertura.</p>
+      </div>
     </div>
+    <form class="contact-form reveal" id="contactForm">
+      <input type="text" placeholder="Tu nombre o alias" required>
+      <input type="email" placeholder="Correo electrónico corporativo o personal" required>
+      <textarea placeholder="Cuéntanos sobre tu propuesta, proyecto o consulta..." required></textarea>
+      <button type="submit" class="btn-primary" style="align-self:flex-start;">Transmitir Mensaje</button>
+      <div class="form-msg" id="formMsg"></div>
+    </form>
   </section>
-</main>
 
-<footer></footer>
+</div>
 
+<footer>
+  <p>© 2026 PixelVerse Games. Proyecto Académico y Experimental de Interacción Web de Alto Rendimiento.</p>
+</footer>
+
+<!-- ==========================================================================
+     CORE JAVASCRIPT: LENIS, THREE.JS 3D, GSAP SCROLLTRIGGER SCRUB, GAMES
+     ========================================================================== */
+-->
 <script>
-  document.getElementById('navToggle').addEventListener('click', function () {
-    document.getElementById('mainNav').classList.toggle('open');
-  });
+gsap.registerPlugin(ScrollTrigger);
 
-  const cDark = "#E8FF8C"; const cAccent = "#39FF14"; const cPanel = "#113318"; const cBg = "#051A0A";
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const keys = {};
-  window.addEventListener("keydown", e => {
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","s"," "].includes(e.key)) e.preventDefault();
-    keys[e.key] = true;
-  });
-  window.addEventListener("keyup", e => { keys[e.key] = false; });
-
-  let snakeHS = localStorage.getItem('snakeHS') || 0;
-  if(document.getElementById('snakeRecord')) document.getElementById('snakeRecord').innerText = snakeHS;
-  let snakeState = { active: false, pts: [], dir: {x:1, y:0}, nextDir: {x:1, y:0}, food: {x:0, y:0}, score: 0, parts: [], lastTime: 0, timeLeft: 30, startTime: 0, speed: 100 };
-  
-  function initSnake() {
-    let speed = 100;
-    if(document.getElementById('snakeDiff')) speed = parseInt(document.getElementById('snakeDiff').value);
-    snakeState = { active: true, pts: [{x: 7, y: 7}, {x: 6, y: 7}, {x: 5, y: 7}], dir: {x:1, y:0}, nextDir: {x:1, y:0}, food: {x: 10, y: 10}, score: 0, parts: [], lastTime: performance.now(), timeLeft: 30, startTime: performance.now(), speed: speed };
-    requestAnimationFrame(snakeLoop);
+/* ---------- 1. LENIS SMOOTH SCROLL CONEXIÓN CON GSAP SCROLLTRIGGER ---------- */
+let lenis = null;
+try {
+  if (!prefersReduced && typeof Lenis !== 'undefined') {
+    lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      syncTouch: false
+    });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
   }
-  window.addEventListener("keydown", e => {
-    if(!snakeState.active) return;
-    if(e.key==="ArrowUp" && snakeState.dir.y===0) snakeState.nextDir = {x:0, y:-1};
-    if(e.key==="ArrowDown" && snakeState.dir.y===0) snakeState.nextDir = {x:0, y:1};
-    if(e.key==="ArrowLeft" && snakeState.dir.x===0) snakeState.nextDir = {x:-1, y:0};
-    if(e.key==="ArrowRight" && snakeState.dir.x===0) snakeState.nextDir = {x:1, y:0};
+} catch (err) {
+  console.warn('Lenis fallback a scroll nativo:', err);
+  lenis = null;
+}
+
+/* Medidor de scroll y telemetría */
+const scrollMeter = document.getElementById('scrollMeter');
+const scrollPercentEl = document.getElementById('scrollPercent');
+window.addEventListener('scroll', () => {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = maxScroll > 0 ? (window.scrollY / maxScroll) : 0;
+  const pct = Math.round(progress * 100);
+  if (scrollMeter) scrollMeter.style.width = pct + '%';
+  if (scrollPercentEl) scrollPercentEl.textContent = pct + '%';
+}, { passive: true });
+
+/* FPS Counter */
+let fpsFrames = 0, lastFpsTime = performance.now();
+const fpsEl = document.getElementById('fpsCounter');
+function updateFps(now) {
+  fpsFrames++;
+  if (now - lastFpsTime >= 1000) {
+    if (fpsEl) fpsEl.textContent = Math.round((fpsFrames * 1000) / (now - lastFpsTime));
+    fpsFrames = 0;
+    lastFpsTime = now;
+  }
+  requestAnimationFrame(updateFps);
+}
+requestAnimationFrame(updateFps);
+
+/* ---------- 2. THREE.JS 3D SPATIAL WEBGL BACKGROUND ---------- */
+let threeScene, threeCamera, threeRenderer, starField, floatingMeshes = [];
+const webglCanvas = document.getElementById('webgl-canvas');
+
+if (!prefersReduced && typeof THREE !== 'undefined' && webglCanvas) {
+  try {
+    threeScene = new THREE.Scene();
+    threeCamera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+    threeCamera.position.set(0, 0, 45);
+
+    threeRenderer = new THREE.WebGLRenderer({
+      canvas: webglCanvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
+    threeRenderer.setSize(window.innerWidth, window.innerHeight);
+    threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+
+    // Luces espaciales
+    const ambientLight = new THREE.AmbientLight(0x0f0b29, 2.2);
+    threeScene.add(ambientLight);
+
+    const pointCyan = new THREE.PointLight(0x00f0ff, 4, 90);
+    pointCyan.position.set(25, 20, 20);
+    threeScene.add(pointCyan);
+
+    const pointRose = new THREE.PointLight(0xff2a85, 4.5, 90);
+    pointRose.position.set(-25, -20, 15);
+    threeScene.add(pointRose);
+
+    // Campo de partículas estelares
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 380;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+
+    const color1 = new THREE.Color(0x00f0ff);
+    const color2 = new THREE.Color(0x9d4edd);
+    const color3 = new THREE.Color(0xff2a85);
+
+    for (let i = 0; i < starCount; i++) {
+      starPositions[i * 3] = (Math.random() - 0.5) * 160;
+      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 160;
+      starPositions[i * 3 + 2] = (Math.random() - 0.5) * 120;
+
+      const rndColor = Math.random() > 0.6 ? color1 : (Math.random() > 0.3 ? color2 : color3);
+      starColors[i * 3] = rndColor.r;
+      starColors[i * 3 + 1] = rndColor.g;
+      starColors[i * 3 + 2] = rndColor.b;
+    }
+
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+
+    const starMat = new THREE.PointsMaterial({
+      size: 0.9,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending
+    });
+    starField = new THREE.Points(starGeo, starMat);
+    threeScene.add(starField);
+
+    // Poliedros y prismas flotantes que reaccionan a la luz
+    const polyGeo1 = new THREE.IcosahedronGeometry(2.4, 0);
+    const polyGeo2 = new THREE.OctahedronGeometry(2.0, 0);
+    const polyGeo3 = new THREE.TetrahedronGeometry(2.2, 0);
+
+    const polyMatWire = new THREE.MeshStandardMaterial({
+      color: 0x00f0ff,
+      wireframe: true,
+      roughness: 0.3,
+      metalness: 0.8
+    });
+    const polyMatSolid = new THREE.MeshStandardMaterial({
+      color: 0x1d1445,
+      roughness: 0.2,
+      metalness: 0.9,
+      wireframe: false
+    });
+
+    for (let i = 0; i < 7; i++) {
+      const mesh = new THREE.Mesh(i % 3 === 0 ? polyGeo1 : (i % 3 === 1 ? polyGeo2 : polyGeo3), i % 2 === 0 ? polyMatWire : polyMatSolid);
+      mesh.position.set(
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 30
+      );
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      mesh.userData = {
+        rotX: (Math.random() - 0.5) * 0.008,
+        rotY: (Math.random() - 0.5) * 0.012
+      };
+      threeScene.add(mesh);
+      floatingMeshes.push(mesh);
+    }
+
+    // Scroll Scrub conectado a la cámara de Three.js
+    gsap.to(threeCamera.position, {
+      z: 22,
+      y: -18,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.viewport-container',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.2
+      }
+    });
+
+    gsap.to(starField.rotation, {
+      y: Math.PI * 0.8,
+      x: Math.PI * 0.35,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.viewport-container',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.5
+      }
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      threeCamera.aspect = window.innerWidth / window.innerHeight;
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Render loop de Three.js
+    let targetMouseX = 0, targetMouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      targetMouseX = (e.clientX / window.innerWidth - 0.5) * 4;
+      targetMouseY = (e.clientY / window.innerHeight - 0.5) * 4;
+    });
+
+    function renderThree() {
+      floatingMeshes.forEach(m => {
+        m.rotation.x += m.userData.rotX;
+        m.rotation.y += m.userData.rotY;
+      });
+      // Amortiguación sutil del mouse
+      threeCamera.position.x += (targetMouseX - threeCamera.position.x) * 0.03;
+      threeCamera.rotation.y = -threeCamera.position.x * 0.015;
+
+      threeRenderer.render(threeScene, threeCamera);
+      requestAnimationFrame(renderThree);
+    }
+    renderThree();
+  } catch (err) {
+    console.warn('WebGL Three.js initialization skipped:', err);
+  }
+}
+
+/* ---------- 3. DATA: TRÁILERS & NOTICIAS ---------- */
+const trailersData = [
+  { studio: 'Pearl Abyss', genre: 'Acción / Mundo abierto', title: 'Crimson Desert | Tráiler oficial de presentación', text: 'Un espectacular mundo de fantasía donde liderarás un clan de mercenarios, con combates dinámicos al estilo de los mejores juegos de acción y criaturas míticas en 8K fidelity.', vid: 'YHhwdyWkwTQ' },
+  { studio: 'EA Sports', genre: 'Fútbol Competitivo', title: 'EA SPORTS FC™ 27 | Tráiler oficial de presentación', text: 'La nueva entrega redefine el realismo con física volumétrica en el balón, recreación fotorrealista de estadios y cinemáticas dinámicas de vestuario.', vid: 'MOclJJ7IpSY' },
+  { studio: 'Activision', genre: 'FPS Táctico', title: 'Call of Duty: Black Ops 7 - Launch Trailer | PS5 & PC', text: 'Un despliegue de acción cinética continua con guerra electrónica clandestina, asaltos a rascacielos y cinemáticas con acabado cinematográfico.', vid: '65Yrv8Q2bco' },
+  { studio: 'Garena', genre: 'Battle Royale Anime', title: 'Free Fire: Daybreak! [Tráiler del Anime] LATAM', text: 'Una audaz interpretación estilizada en anime, repleta de velocidad, batallas aéreas y un derroche de color neón vanguardista.', vid: 'STNrQHfd2LI' },
+  { studio: 'Insomniac Games', genre: 'Acción / Aventura', title: "Marvel's Wolverine Reveal Trailer", text: 'El regreso más esperado del mutante con garras de adamantium en una atmósfera oscura y visceral con la fidelidad técnica insuperable de PlayStation Studios.', vid: 'G62QQ42Ewwg' }
+];
+
+const newsData = [
+  { studio: 'Nintendo EPD', title: 'Tears of the Kingdom sigue rompiendo récords de innovación técnica', text: 'La física de construcción ultra-avanzada de Hyrule continúa siendo objeto de estudio en ingeniería de software y diseño de videojuegos interactivos.' },
+  { studio: 'FromSoftware', title: 'Elden Ring y sus expansiones elevan la narrativa ambiental', text: 'El RPG desafiante mantiene millones de jugadores activos gracias a su arquitectura espacial orgánica y diseño de jefes legendarios.' },
+  { studio: 'CD Projekt Red', title: 'Cyberpunk 2077 consolida el Ray Tracing Overdrive en PC', text: 'Night City se convierte en el benchmark de iluminación por trazado de caminos en tiempo real con una densidad visual inigualada.' }
+];
+
+// Generar Cards de Tráilers
+const trailerGrid = document.getElementById('trailerGrid');
+trailersData.forEach(t => {
+  const card = document.createElement('div');
+  card.className = 'trailer-card reveal';
+  card.innerHTML = `
+    <div class="card-tags">
+      <span class="tag">${t.studio}</span>
+      <span class="tag alt">${t.genre}</span>
+    </div>
+    <h3>${t.title}</h3>
+    <p>${t.text}</p>
+    <div class="video-frame-container">
+      <iframe src="https://www.youtube.com/embed/${t.vid}?modestbranding=1&rel=0" title="${t.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>
+  `;
+  trailerGrid.appendChild(card);
+});
+
+// Generar Cards de Noticias
+const newsGrid = document.getElementById('newsGrid');
+newsData.forEach(n => {
+  const card = document.createElement('div');
+  card.className = 'news-card reveal';
+  card.innerHTML = `
+    <div class="studio">${n.studio}</div>
+    <h3>${n.title}</h3>
+    <p>${n.text}</p>
+  `;
+  newsGrid.appendChild(card);
+});
+
+/* ---------- 4. NAVEGACIÓN & CURSOR INTERACTIVO ---------- */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+document.querySelectorAll('a[href^="#"]').forEach(l => {
+  l.addEventListener('click', e => {
+    const target = document.querySelector(l.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      if (lenis) lenis.scrollTo(target, { offset: -68, duration: 1.4 });
+      else target.scrollIntoView({ behavior: 'smooth' });
+    }
+    navLinks.classList.remove('open');
   });
-  function snakeLoop(time) {
-    if(!snakeState.active) return;
-    requestAnimationFrame(snakeLoop);
-    const ctx = document.getElementById("snakeCanvas").getContext("2d");
-    
-    snakeState.timeLeft = Math.max(0, 30 - Math.floor((time - snakeState.startTime)/1000));
-    
-    if(time - snakeState.lastTime > snakeState.speed) {
-      snakeState.lastTime = time;
-      snakeState.dir = snakeState.nextDir;
-      let head = {x: snakeState.pts[0].x + snakeState.dir.x, y: snakeState.pts[0].y + snakeState.dir.y};
-      
-      if(head.x<0 || head.x>=14 || head.y<0 || head.y>=14 || snakeState.pts.some(s => s.x===head.x && s.y===head.y) || snakeState.timeLeft <= 0) {
-        snakeState.active = false;
-        if(snakeState.score > snakeHS) { snakeHS = snakeState.score; localStorage.setItem('snakeHS', snakeHS); document.getElementById('snakeRecord').innerText = snakeHS; }
-        ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-        ctx.fillStyle = cDark; ctx.font = "bold 26px Arial"; ctx.textAlign="center";
-        ctx.fillText(snakeState.timeLeft <= 0 ? "¡Tiempo!" : "¡Oh no!", 140, 120); 
-        ctx.font = "16px Arial"; ctx.fillText("Puntos: " + snakeState.score, 140, 150);
-        ctx.fillText("Clic en Jugar para repetir", 140, 180);
+});
+
+const sectionEls = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sectionEls.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 240) current = s.id;
+  });
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+  });
+}, { passive: true });
+
+// Cursor Glow Follower
+const glow = document.getElementById('cursorGlow');
+window.addEventListener('mousemove', e => {
+  if (glow) {
+    glow.style.opacity = 1;
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+  }
+});
+window.addEventListener('mouseleave', () => {
+  if (glow) glow.style.opacity = 0;
+});
+
+/* ---------- 5. 3D TILT SUTIL CON RETORNO ELÁSTICO (MOUSE INTERACTION) ---------- */
+function attachTilt(el, maxDeg = 10) {
+  el.addEventListener('mousemove', e => {
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    gsap.to(el, {
+      rotateX: -py * maxDeg,
+      rotateY: px * maxDeg,
+      transformPerspective: 1100,
+      duration: 0.35,
+      ease: 'power1.out',
+      overwrite: 'auto'
+    });
+  });
+  el.addEventListener('mouseleave', () => {
+    gsap.to(el, {
+      rotateX: 0,
+      rotateY: 0,
+      duration: 0.7,
+      ease: 'elastic.out(1, 0.45)',
+      overwrite: 'auto'
+    });
+  });
+}
+document.querySelectorAll('.trailer-card, .game-card, .news-card').forEach(el => attachTilt(el, 11));
+
+/* ---------- 6. HELPER: PARTICIONADO DE LETRAS (SPLIT TEXT 3D) ---------- */
+function splitLetters(el) {
+  if (!el) return [];
+  const text = el.textContent.trim();
+  el.textContent = '';
+  const spans = [];
+  text.split('').forEach(ch => {
+    const s = document.createElement('span');
+    s.className = 'ch';
+    s.textContent = ch === ' ' ? '\u00A0' : ch;
+    el.appendChild(s);
+    spans.push(s);
+  });
+  return spans;
+}
+
+/* ---------- 7. GSAP SCROLLTRIGGER MOTION ARCHITECTURE ---------- */
+const mm = gsap.matchMedia();
+
+mm.add({
+  isDesktop: '(min-width: 961px)',
+  isTablet: '(min-width: 641px) and (max-width: 960px)',
+  isMobile: '(max-width: 640px)',
+  isReduced: '(prefers-reduced-motion: reduce)'
+}, (context) => {
+  const { isDesktop, isMobile, isReduced } = context.conditions;
+
+  if (isReduced) {
+    gsap.set('.reveal, .section-head *, .destroy-headline .ch, .satellite-badge, .destroy-kicker, .destroy-caption', {
+      opacity: 1, x: 0, y: 0, rotation: 0, scale: 1
+    });
+    return;
+  }
+
+  /* ---- A. ENTRADA DEL HÉROE & PULL-OUT 3D AL SCROLLEAR ---- */
+  const heroLetters = splitLetters(document.getElementById('heroTitle'));
+  gsap.set(heroLetters, { y: 70, opacity: 0, rotateX: -75, transformPerspective: 1000 });
+  gsap.to(heroLetters, {
+    y: 0,
+    opacity: 1,
+    rotateX: 0,
+    duration: 1.1,
+    stagger: 0.02,
+    ease: 'power3.out',
+    delay: 0.15
+  });
+
+  gsap.from('.hero-eyebrow, .hero p, .hero-actions', {
+    opacity: 0,
+    y: 35,
+    duration: 0.95,
+    stagger: 0.14,
+    ease: 'power2.out',
+    delay: 0.45
+  });
+
+  // Pull-out y deformación del héroe en scroll scrub
+  gsap.to('.hero-inner', {
+    scrollTrigger: {
+      trigger: '.hero',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 0.8
+    },
+    y: -140,
+    rotateX: 18,
+    scale: 0.84,
+    opacity: 0.1,
+    ease: 'none'
+  });
+
+  // Parallax del mouse en héroe (desktop)
+  if (isDesktop) {
+    const heroSection = document.querySelector('.hero');
+    heroSection.addEventListener('mousemove', e => {
+      const px = e.clientX / window.innerWidth - 0.5;
+      const py = e.clientY / window.innerHeight - 0.5;
+      gsap.to('.hero h1', { x: px * 32, y: py * 20, rotateY: px * 10, rotateX: -py * 8, duration: 0.65, ease: 'power2.out' });
+      gsap.to('.hero p, .hero-actions', { x: px * 18, y: py * 10, duration: 0.65, ease: 'power2.out' });
+    });
+  }
+
+  /* ---- B. ESCENA PINNED DE DESTRUCCIÓN & METAMORFOSIS 3D ---- */
+  const shardMatrix = document.getElementById('shardMatrix');
+  shardMatrix.innerHTML = '';
+  const shards = [];
+
+  // Crear 12 shards poligonales arquitectónicos
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('div');
+    s.className = 'shard';
+    const w = gsap.utils.random(70, 160);
+    const h = gsap.utils.random(60, 130);
+    s.style.width = w + 'px';
+    s.style.height = h + 'px';
+    // Colocación inicial concéntrica formando el núcleo monolítico
+    const angle = (i / 12) * Math.PI * 2;
+    const rad = gsap.utils.random(40, 110);
+    const initX = Math.cos(angle) * rad - w / 2;
+    const initY = Math.sin(angle) * rad - h / 2;
+    s.style.transform = `translate3d(${initX}px, ${initY}px, ${gsap.utils.random(-20, 20)}px) rotate(${gsap.utils.random(-15, 15)}deg)`;
+    shardMatrix.appendChild(s);
+
+    shards.push({
+      el: s,
+      destX: Math.cos(angle) * gsap.utils.random(320, 680),
+      destY: Math.sin(angle) * gsap.utils.random(260, 520),
+      destZ: gsap.utils.random(-500, 700),
+      rotX: gsap.utils.random(-360, 360),
+      rotY: gsap.utils.random(-360, 360),
+      rotZ: gsap.utils.random(-180, 180),
+      scale: gsap.utils.random(0.3, 1.8)
+    });
+  }
+
+  // Crear 26 partículas/escombros cinéticos que salen disparados
+  const assembly = document.getElementById('sculptureAssembly');
+  const debris = [];
+  for (let i = 0; i < 26; i++) {
+    const d = document.createElement('div');
+    d.className = 'kinetic-debris';
+    const sz = gsap.utils.random(6, 18);
+    d.style.width = sz + 'px';
+    d.style.height = sz + 'px';
+    d.style.background = i % 3 === 0 ? 'var(--cyan)' : (i % 3 === 1 ? 'var(--rose)' : 'var(--violet)');
+    d.style.boxShadow = `0 0 14px ${d.style.background}`;
+    d.style.opacity = '0';
+    assembly.appendChild(d);
+    debris.push({
+      el: d,
+      dx: gsap.utils.random(-550, 550),
+      dy: gsap.utils.random(-420, 420),
+      dz: gsap.utils.random(-600, 800),
+      rot: gsap.utils.random(-480, 480),
+      scale: gsap.utils.random(0.4, 2.2)
+    });
+  }
+
+  const dHeadlineLetters = splitLetters(document.getElementById('destroyHeadline'));
+  const pinDuration = isDesktop ? '+=4600' : (isMobile ? '+=3000' : '+=3800');
+
+  const destroyTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: '.destroy-stage-section',
+      start: 'top top',
+      end: pinDuration,
+      scrub: 1.2,
+      pin: true
+    }
+  });
+
+  // FASE 1: PERMANENCIA MAJESTUOSA (0% a 35% del recorrido de scroll)
+  // El monolito, el kicker, EXPERIENCIA en una sola línea y el texto se mantienen 100% armados y legibles.
+  destroyTimeline
+    .to('#quantumRing', { rotateZ: 90, rotateX: 30, duration: 0.35, ease: 'none' }, 0)
+    .to(shards.map(s => s.el), { z: (i) => (i % 2 === 0 ? 25 : -25), duration: 0.35, ease: 'power1.out' }, 0)
+    .to('.satellite-badge', { y: (i) => (i % 2 === 0 ? -8 : 8), duration: 0.35, ease: 'power1.out' }, 0)
+
+  // FASE 2: TENSIÓN Y CARGA CUÁNTICA (35% a 50%)
+  // El monolito comienza a vibrar y a irradiar energía, los badges titilan, pero el texto sigue legible.
+    .to('#destroyKicker', { letterSpacing: '0.32em', opacity: 0.95, duration: 0.15, ease: 'power1.inOut' }, 0.35)
+    .to(dHeadlineLetters, {
+      x: () => gsap.utils.random(-6, 6),
+      y: () => gsap.utils.random(-6, 6),
+      scale: 1.06,
+      duration: 0.15,
+      stagger: 0.008,
+      ease: 'power1.inOut'
+    }, 0.35)
+    .to(shards.map(s => s.el), {
+      x: () => gsap.utils.random(-18, 18),
+      y: () => gsap.utils.random(-18, 18),
+      rotateZ: () => gsap.utils.random(-8, 8),
+      duration: 0.15,
+      stagger: 0.006,
+      ease: 'power1.inOut'
+    }, 0.35)
+    .to('.satellite-badge', { opacity: 0.5, scale: 0.9, duration: 0.15 }, 0.35)
+    .to('#destroyCaption', { opacity: 0.75, y: 12, duration: 0.15 }, 0.35)
+
+  // FASE 3: GRAN DESTRUCCIÓN Y FRACTURA ESPACIAL 3D (50% a 78%)
+  // Dispersión explosiva hacia todas las direcciones tridimensionales
+    .to('#destroyKicker', { y: -65, opacity: 0, scale: 0.8, duration: 0.2, ease: 'power2.in' }, 0.5)
+    .to('#destroyCaption', { y: 70, opacity: 0, duration: 0.2, ease: 'power2.in' }, 0.5)
+    .to('.satellite-badge', {
+      x: (i) => (i < 2 ? -260 : 260),
+      y: (i) => (i % 2 === 0 ? -220 : 220),
+      scale: 0.2,
+      opacity: 0,
+      stagger: 0.02,
+      duration: 0.22,
+      ease: 'power2.in'
+    }, 0.5)
+    .to(dHeadlineLetters, {
+      x: () => gsap.utils.random(-520, 520),
+      y: () => gsap.utils.random(-380, 380),
+      z: () => gsap.utils.random(-750, 750),
+      rotateX: () => gsap.utils.random(-360, 360),
+      rotateY: () => gsap.utils.random(-360, 360),
+      rotateZ: () => gsap.utils.random(-240, 240),
+      scale: () => gsap.utils.random(0.3, 2.0),
+      opacity: 0,
+      stagger: 0.016,
+      duration: 0.28,
+      ease: 'power2.in'
+    }, 0.5)
+    .to(shards.map(s => s.el), {
+      x: (i) => shards[i].destX * 1.3,
+      y: (i) => shards[i].destY * 1.3,
+      z: (i) => shards[i].destZ * 1.3,
+      rotateX: (i) => shards[i].rotX,
+      rotateY: (i) => shards[i].rotY,
+      rotateZ: (i) => shards[i].rotZ,
+      scale: (i) => shards[i].scale,
+      opacity: 0,
+      stagger: 0.012,
+      duration: 0.3,
+      ease: 'power2.in'
+    }, 0.5)
+    .set(debris.map(d => d.el), { opacity: 1 }, 0.5)
+    .to(debris.map(d => d.el), {
+      x: (i) => debris[i].dx * 1.4,
+      y: (i) => debris[i].dy * 1.4,
+      z: (i) => debris[i].dz * 1.4,
+      rotation: (i) => debris[i].rot,
+      scale: (i) => debris[i].scale,
+      opacity: 0,
+      duration: 0.32,
+      stagger: 0.008,
+      ease: 'power1.out'
+    }, 0.52)
+    .to('#quantumRing', { scale: 2.8, opacity: 0, rotateZ: 360, duration: 0.3, ease: 'power2.out' }, 0.54)
+
+  // FASE 4: DISPERSIÓN TOTAL Y VIRTUAL PORTAL HACIA TRÁILERS (78% a 100%)
+    .to({}, { duration: 0.22 });
+
+  /* ---- C. RECONSTRUCCIÓN 3D DE TITULARES EN CADA SECCIÓN ---- */
+  document.querySelectorAll('.section-head').forEach((head, idx) => {
+    const kicker = head.querySelector('.kicker');
+    const h2 = head.querySelector('h2');
+    const p = head.querySelector('p');
+    const letters = splitLetters(h2);
+    const dir = idx % 2 === 0 ? 1 : -1;
+
+    gsap.set(letters, {
+      x: () => gsap.utils.random(120, 260) * dir * (Math.random() > 0.5 ? 1 : -1),
+      y: () => gsap.utils.random(-90, 90),
+      rotateX: () => gsap.utils.random(-110, 110),
+      rotateY: () => gsap.utils.random(-110, 110),
+      rotateZ: () => gsap.utils.random(-70, 70),
+      scale: () => gsap.utils.random(0.4, 1.5),
+      opacity: 0
+    });
+    gsap.set(kicker, { x: -80 * dir, opacity: 0 });
+    gsap.set(p, { y: 40, opacity: 0 });
+
+    const rebuildTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: head,
+        start: 'top 90%',
+        end: 'top 45%',
+        scrub: 0.6
+      }
+    });
+
+    rebuildTimeline
+      .to(kicker, { x: 0, opacity: 1, duration: 1, ease: 'power2.out' }, 0)
+      .to(letters, {
+        x: 0, y: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1, opacity: 1,
+        duration: 1.1, stagger: 0.015, ease: 'power2.out'
+      }, 0.04)
+      .to(p, { y: 0, opacity: 1, duration: 1, ease: 'power2.out' }, 0.25);
+  });
+
+  /* ---- D. ENTRADA CON PERSPECTIVA 3D DE TODAS LAS TARJETAS (CARDS REVEAL) ---- */
+  document.querySelectorAll('.reveal:not(.section-head)').forEach((el, i) => {
+    const dir = i % 2 === 0 ? -1 : 1;
+    gsap.fromTo(el,
+      {
+        opacity: 0,
+        x: 80 * dir,
+        y: 70,
+        rotateX: 20,
+        rotateY: 22 * dir,
+        scale: 0.86,
+        transformPerspective: 1200
+      },
+      {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        rotateX: 0,
+        rotateY: 0,
+        scale: 1,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 93%',
+          end: 'top 52%',
+          scrub: 0.75
+        }
+      }
+    );
+  });
+
+  /* ---- E. PROFUNDIDAD MULTICAPA PARALLAX (DESKTOP) ---- */
+  if (isDesktop) {
+    document.querySelectorAll('.games-grid .game-card').forEach((card, i) => {
+      const depth = [-10, 8, -6, 12, -8, 10, -10, 14][i % 8];
+      gsap.to(card, {
+        yPercent: depth,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#juegos',
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    });
+
+    document.querySelectorAll('#trailerGrid .trailer-card').forEach((card, i) => {
+      const depth = [-12, 10, 16, -8, 12][i % 5];
+      gsap.to(card, {
+        yPercent: depth,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#trailers',
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    });
+  }
+});
+
+/* ==========================================================================
+   8 MINIJUEGOS INTERACTIVOS (CONSERVACIÓN Y EJECUCIÓN NATIVA AL 100%)
+   ========================================================================== */
+
+/* ---- GAME 1: SNAKE ---- */
+(function() {
+  const canvas = document.getElementById('snakeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = 20, cols = canvas.width / size, rows = canvas.height / size;
+  let snake, dir, food, timer, running = false, timeLeft, score = 0, record = 0;
+  const speeds = { easy: 180, medium: 120, hard: 80 };
+  let curDiff = 'easy';
+
+  document.querySelectorAll('[data-game="snake"]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-game="snake"]').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      curDiff = b.dataset.diff;
+    });
+  });
+
+  function placeFood() {
+    food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+  }
+
+  function reset() {
+    snake = [{ x: 5, y: 5 }];
+    dir = { x: 1, y: 0 };
+    placeFood();
+    score = 0;
+    timeLeft = 30;
+    document.getElementById('snakeScore').textContent = score;
+  }
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Grid sutil
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+    for (let x = 0; x < canvas.width; x += size) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    // Comida Neón
+    ctx.fillStyle = '#ff2a85';
+    ctx.shadowColor = '#ff2a85';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(food.x * size + 2, food.y * size + 2, size - 4, size - 4);
+    // Serpiente Cian
+    ctx.fillStyle = '#00f0ff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
+    snake.forEach(s => ctx.fillRect(s.x * size + 1, s.y * size + 1, size - 2, size - 2));
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '12px Space Grotesk';
+    ctx.fillText('Tiempo: ' + Math.ceil(timeLeft) + 's', 8, 18);
+  }
+
+  function step() {
+    if (!running) return;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows || snake.some(s => s.x === head.x && s.y === head.y)) {
+      endGame();
+      return;
+    }
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      document.getElementById('snakeScore').textContent = score;
+      placeFood();
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(timer);
+    clearInterval(countdownTimer);
+    if (score > record) {
+      record = score;
+      document.getElementById('snakeRecord').textContent = record;
+    }
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIN DEL JUEGO · PUNTAJE: ' + score, canvas.width / 2, canvas.height / 2);
+    ctx.textAlign = 'left';
+  }
+
+  let countdownTimer;
+  document.getElementById('snakePlay').addEventListener('click', () => {
+    reset();
+    running = true;
+    draw();
+    clearInterval(timer);
+    clearInterval(countdownTimer);
+    timer = setInterval(step, speeds[curDiff]);
+    countdownTimer = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) endGame();
+    }, 100);
+  });
+
+  window.addEventListener('keydown', e => {
+    if (!running) return;
+    if (e.key === 'ArrowUp' && dir.y !== 1) { dir = { x: 0, y: -1 }; }
+    if (e.key === 'ArrowDown' && dir.y !== -1) { dir = { x: 0, y: 1 }; }
+    if (e.key === 'ArrowLeft' && dir.x !== 1) { dir = { x: -1, y: 0 }; }
+    if (e.key === 'ArrowRight' && dir.x !== -1) { dir = { x: 1, y: 0 }; }
+  });
+  reset();
+  draw();
+})();
+
+/* ---- GAME 2: TRES EN RAYA ---- */
+(function() {
+  const board = document.getElementById('tttBoard');
+  const status = document.getElementById('tttStatus');
+  if (!board) return;
+  let cells = Array(9).fill(null), turn = 'X', over = false;
+  const wins = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+
+  function render() {
+    board.innerHTML = '';
+    cells.forEach((c, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'ttt-cell';
+      cell.textContent = c || '';
+      if (c === 'X') cell.style.color = '#00f0ff';
+      if (c === 'O') cell.style.color = '#ff2a85';
+      cell.addEventListener('click', () => {
+        if (over || cells[i]) return;
+        cells[i] = turn;
+        checkWin();
+        if (!over) {
+          turn = turn === 'X' ? 'O' : 'X';
+          status.textContent = 'Turno de ' + turn;
+        }
+        render();
+      });
+      board.appendChild(cell);
+    });
+  }
+
+  function checkWin() {
+    for (const [a, b, c] of wins) {
+      if (cells[a] && cells[a] === cells[b] && cells[b] === cells[c]) {
+        status.textContent = '¡Ganó ' + cells[a] + '! 🎉';
+        over = true;
         return;
       }
-      
-      snakeState.pts.unshift(head);
-      if(head.x === snakeState.food.x && head.y === snakeState.food.y) {
-        snakeState.score += 10;
-        for(let i=0;i<15;i++) snakeState.parts.push({x: head.x*20+10, y: head.y*20+10, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1});
-        snakeState.food = {x: Math.floor(Math.random()*14), y: Math.floor(Math.random()*14)};
-      } else { snakeState.pts.pop(); }
     }
-    
-    ctx.clearRect(0,0,280,280);
-    ctx.strokeStyle = cPanel; ctx.lineWidth = 1; ctx.globalAlpha = 0.2;
-    for(let i=0; i<=280; i+=20) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,280); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(280,i); ctx.stroke(); }
-    ctx.globalAlpha = 1;
-    
-    // Objeto (fruta) más pequeño
-    let pulse = 6 + Math.sin(time*0.01)*1.5;
-    ctx.fillStyle = cAccent; ctx.beginPath(); ctx.arc(snakeState.food.x*20+10, snakeState.food.y*20+10, pulse, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = cDark; ctx.beginPath(); ctx.roundRect(snakeState.food.x*20+9, snakeState.food.y*20+2, 2, 4, 1); ctx.fill();
-    
-    ctx.fillStyle = cDark;
-    for(let i=0; i<snakeState.pts.length; i++) {
-      let s = snakeState.pts[i];
-      if(i===0) {
-        ctx.beginPath(); ctx.arc(s.x*20+10, s.y*20+10, 10, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = cBg;
-        let ex = s.x*20+10, ey = s.y*20+10;
-        if(snakeState.dir.x===1) { ctx.beginPath(); ctx.arc(ex+3, ey-4, 2, 0, Math.PI*2); ctx.arc(ex+3, ey+4, 2, 0, Math.PI*2); ctx.fill(); }
-        else if(snakeState.dir.x===-1) { ctx.beginPath(); ctx.arc(ex-3, ey-4, 2, 0, Math.PI*2); ctx.arc(ex-3, ey+4, 2, 0, Math.PI*2); ctx.fill(); }
-        else if(snakeState.dir.y===1) { ctx.beginPath(); ctx.arc(ex-4, ey+3, 2, 0, Math.PI*2); ctx.arc(ex+4, ey+3, 2, 0, Math.PI*2); ctx.fill(); }
-        else if(snakeState.dir.y===-1) { ctx.beginPath(); ctx.arc(ex-4, ey-3, 2, 0, Math.PI*2); ctx.arc(ex+4, ey-3, 2, 0, Math.PI*2); ctx.fill(); }
-        ctx.fillStyle = cDark;
-      } else {
-        ctx.beginPath(); ctx.roundRect(s.x*20+1, s.y*20+1, 18, 18, 6); ctx.fill();
-      }
+    if (cells.every(c => c)) {
+      status.textContent = '¡Empate!';
+      over = true;
     }
-    
-    for(let i=snakeState.parts.length-1; i>=0; i--) {
-      let p = snakeState.parts[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-      if(p.life<=0) { snakeState.parts.splice(i,1); continue; }
-      ctx.globalAlpha = p.life; ctx.fillStyle = cAccent; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = cDark; ctx.font = "bold 18px Arial"; ctx.textAlign="left"; ctx.fillText(snakeState.score, 10, 22);
   }
 
-  let ttt = { board: [], turn: "X", active: false, hover: -1, winLine: null };
-  const tttCvs = document.getElementById("tttCanvas");
-  function initTTT() {
-    ttt = { board: ["","","","","","","","",""], turn: "X", active: true, hover: -1, winLine: null };
-    drawTTT();
-  }
-  tttCvs.addEventListener("mousemove", e => {
-    if(!ttt.active) return;
-    const r = tttCvs.getBoundingClientRect();
-    const idx = Math.floor((e.clientY - r.top)/93)*3 + Math.floor((e.clientX - r.left)/93);
-    if(ttt.hover !== idx) { ttt.hover = idx; drawTTT(); }
+  document.getElementById('tttReset').addEventListener('click', () => {
+    cells = Array(9).fill(null);
+    turn = 'X';
+    over = false;
+    status.textContent = 'Turno de X';
+    render();
   });
-  tttCvs.addEventListener("mouseleave", () => { ttt.hover = -1; drawTTT(); });
-  tttCvs.addEventListener("click", e => {
-    if(!ttt.active) return initTTT();
-    const idx = ttt.hover;
-    if(idx>=0 && idx<=8 && !ttt.board[idx]) {
-      ttt.board[idx] = ttt.turn; ttt.turn = ttt.turn==="X"?"O":"X";
-      const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].find(w => ttt.board[w[0]] && ttt.board[w[0]]===ttt.board[w[1]] && ttt.board[w[1]]===ttt.board[w[2]]);
-      if(w) { ttt.active = false; ttt.winLine = w; }
-      else if(!ttt.board.includes("")) ttt.active = false;
-      drawTTT();
+  render();
+})();
+
+/* ---- GAME 3: PONG ---- */
+(function() {
+  const canvas = document.getElementById('pongCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let leftY = H / 2 - 30, rightY = H / 2 - 30, ballX = W / 2, ballY = H / 2, vx = 3.2, vy = 2.4, loop;
+  let scoreL = 0, scoreR = 0;
+  const keys = {};
+
+  window.addEventListener('keydown', e => keys[e.key] = true);
+  window.addEventListener('keyup', e => keys[e.key] = false);
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+    ctx.setLineDash([6, 8]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Palas
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillRect(10, leftY, 8, 60);
+    ctx.fillStyle = '#ff2a85';
+    ctx.fillRect(W - 18, rightY, 8, 60);
+
+    // Bola Neón
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function step() {
+    if (keys['w'] || keys['W']) leftY -= 5.5;
+    if (keys['s'] || keys['S']) leftY += 5.5;
+    leftY = Math.max(0, Math.min(H - 60, leftY));
+
+    const target = ballY - 30;
+    rightY += (target - rightY) * 0.085;
+    rightY = Math.max(0, Math.min(H - 60, rightY));
+
+    ballX += vx;
+    ballY += vy;
+    if (ballY < 6 || ballY > H - 6) vy *= -1;
+    if (ballX < 20 && ballY > leftY && ballY < leftY + 60) {
+      vx *= -1.05;
+      ballX = 20;
+    }
+    if (ballX > W - 20 && ballY > rightY && ballY < rightY + 60) {
+      vx *= -1.05;
+      ballX = W - 20;
+    }
+    if (ballX < 0) {
+      scoreR++;
+      document.getElementById('pongScoreR').textContent = scoreR;
+      resetBall(-1);
+    }
+    if (ballX > W) {
+      scoreL++;
+      document.getElementById('pongScoreL').textContent = scoreL;
+      resetBall(1);
+    }
+    draw();
+  }
+
+  function resetBall(dir) {
+    ballX = W / 2;
+    ballY = H / 2;
+    vx = 3.2 * dir;
+    vy = (Math.random() - 0.5) * 4;
+  }
+
+  document.getElementById('pongPlay').addEventListener('click', () => {
+    scoreL = 0;
+    scoreR = 0;
+    document.getElementById('pongScoreL').textContent = 0;
+    document.getElementById('pongScoreR').textContent = 0;
+    resetBall(1);
+    clearInterval(loop);
+    loop = setInterval(step, 16);
+  });
+  draw();
+})();
+
+/* ---- GAME 4: ATRAPA LA FRUTA ---- */
+(function() {
+  const canvas = document.getElementById('fruitCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let basketX = W / 2 - 25, fruits = [], running = false, timeLeft = 30, score = 0, record = 0, loop, spawnTimer, countdownTimer;
+  const settings = { easy: { size: 22, speed: 2, spawn: 700 }, medium: { size: 16, speed: 3, spawn: 550 }, hard: { size: 11, speed: 4.2, spawn: 400 } };
+  let curDiff = 'easy';
+
+  document.querySelectorAll('[data-game="fruit"]').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-game="fruit"]').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      curDiff = b.dataset.diff;
+    });
+  });
+
+  const keys = {};
+  window.addEventListener('keydown', e => keys[e.key] = true);
+  window.addEventListener('keyup', e => keys[e.key] = false);
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    // Canasto Neón
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillRect(basketX, H - 18, 54, 12);
+    // Frutas
+    const s = settings[curDiff];
+    fruits.forEach(f => {
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, s.size / 2, 0, Math.PI * 2);
+      ctx.fillStyle = f.color;
+      ctx.fill();
+    });
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '12px Space Grotesk';
+    ctx.fillText('Tiempo: ' + Math.ceil(timeLeft) + 's', 8, 18);
+  }
+
+  function step() {
+    const s = settings[curDiff];
+    if (keys['ArrowLeft']) basketX -= 6.5;
+    if (keys['ArrowRight']) basketX += 6.5;
+    basketX = Math.max(0, Math.min(W - 54, basketX));
+
+    fruits.forEach(f => f.y += s.speed);
+    fruits = fruits.filter(f => {
+      if (f.y > H - 18 && f.x > basketX - 8 && f.x < basketX + 62) {
+        score++;
+        document.getElementById('fruitScore').textContent = score;
+        return false;
+      }
+      return f.y < H + 10;
+    });
+    draw();
+  }
+
+  function spawn() {
+    const colors = ['#ff2a85', '#00f0ff', '#ffbe0b', '#9d4edd'];
+    fruits.push({ x: Math.random() * (W - 24) + 12, y: -10, color: colors[Math.floor(Math.random() * colors.length)] });
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(loop);
+    clearInterval(spawnTimer);
+    clearInterval(countdownTimer);
+    if (score > record) {
+      record = score;
+      document.getElementById('fruitRecord').textContent = record;
+    }
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIN DEL JUEGO · PUNTAJE: ' + score, W / 2, H / 2);
+    ctx.textAlign = 'left';
+  }
+
+  document.getElementById('fruitPlay').addEventListener('click', () => {
+    fruits = [];
+    score = 0;
+    timeLeft = 30;
+    document.getElementById('fruitScore').textContent = 0;
+    running = true;
+    clearInterval(loop);
+    clearInterval(spawnTimer);
+    clearInterval(countdownTimer);
+    loop = setInterval(step, 30);
+    spawnTimer = setInterval(spawn, settings[curDiff].spawn);
+    countdownTimer = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) endGame();
+    }, 100);
+  });
+  draw();
+})();
+
+/* ---- GAME 5: BREAKOUT (DESTRUYE LADRILLOS) ---- */
+(function() {
+  const canvas = document.getElementById('brickCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let paddleX = W / 2 - 35, ballX = W / 2, ballY = H - 40, vx = 2.8, vy = -2.8, lives = 3, bricks = [], loop;
+  const rows = 4, bcols = 7, bw = W / bcols, bh = 16;
+
+  function initBricks() {
+    bricks = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < bcols; c++) {
+        bricks.push({ x: c * bw, y: r * bh + 20, alive: true });
+      }
+    }
+    document.getElementById('brickCount').textContent = bricks.length;
+  }
+
+  const keys = {};
+  window.addEventListener('keydown', e => keys[e.key] = true);
+  window.addEventListener('keyup', e => keys[e.key] = false);
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    bricks.forEach((b, i) => {
+      if (b.alive) {
+        ctx.fillStyle = i % 2 === 0 ? '#00f0ff' : '#9d4edd';
+        ctx.fillRect(b.x + 2, b.y + 2, bw - 4, bh - 4);
+      }
+    });
+    ctx.fillStyle = '#ff2a85';
+    ctx.fillRect(paddleX, H - 16, 70, 10);
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+
+  function step() {
+    if (keys['ArrowLeft']) paddleX -= 6.5;
+    if (keys['ArrowRight']) paddleX += 6.5;
+    paddleX = Math.max(0, Math.min(W - 70, paddleX));
+
+    ballX += vx;
+    ballY += vy;
+    if (ballX < 6 || ballX > W - 6) vx *= -1;
+    if (ballY < 6) vy *= -1;
+    if (ballY > H - 24 && ballX > paddleX && ballX < paddleX + 70) vy = -Math.abs(vy);
+
+    bricks.forEach(b => {
+      if (b.alive && ballX > b.x && ballX < b.x + bw && ballY > b.y && ballY < b.y + bh) {
+        b.alive = false;
+        vy *= -1;
+        document.getElementById('brickCount').textContent = bricks.filter(x => x.alive).length;
+      }
+    });
+
+    if (ballY > H) {
+      lives--;
+      document.getElementById('brickLives').textContent = lives;
+      if (lives <= 0) {
+        endGame(false);
+        return;
+      }
+      ballX = W / 2;
+      ballY = H - 40;
+      vx = 2.8;
+      vy = -2.8;
+    }
+    if (bricks.every(b => !b.alive)) endGame(true);
+    draw();
+  }
+
+  function endGame(won) {
+    clearInterval(loop);
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText(won ? '¡VICTORIA TOTAL!' : 'FIN DEL JUEGO', W / 2, H / 2);
+    ctx.textAlign = 'left';
+  }
+
+  document.getElementById('brickPlay').addEventListener('click', () => {
+    initBricks();
+    lives = 3;
+    document.getElementById('brickLives').textContent = 3;
+    ballX = W / 2;
+    ballY = H - 40;
+    vx = 2.8;
+    vy = -2.8;
+    paddleX = W / 2 - 35;
+    clearInterval(loop);
+    loop = setInterval(step, 16);
+  });
+  initBricks();
+  draw();
+})();
+
+/* ---- GAME 6: FLAPPY CUBO ---- */
+(function() {
+  const canvas = document.getElementById('flappyCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let cubeY = H / 2, vy = 0, pipes = [], score = 0, record = 0, loop, running = false, frame = 0;
+
+  function flap() {
+    if (running) vy = -6.4;
+  }
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+      e.preventDefault();
+      flap();
     }
   });
-  function drawTTT() {
-    const ctx = tttCvs.getContext("2d");
-    ctx.clearRect(0,0,280,280);
-    ctx.strokeStyle = cPanel; ctx.lineWidth = 6; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(93, 20); ctx.lineTo(93, 260); ctx.moveTo(186, 20); ctx.lineTo(186, 260);
-    ctx.moveTo(20, 93); ctx.lineTo(260, 93); ctx.moveTo(20, 186); ctx.lineTo(260, 186); ctx.stroke();
-    
-    for(let i=0; i<9; i++) {
-      let x = (i%3)*93+46, y = Math.floor(i/3)*93+46;
-      if(ttt.board[i]) {
-        ctx.lineWidth = 10;
-        if(ttt.board[i]==="X") {
-          ctx.strokeStyle = cAccent; ctx.beginPath(); ctx.moveTo(x-22, y-22); ctx.lineTo(x+22, y+22); ctx.moveTo(x+22, y-22); ctx.lineTo(x-22, y+22); ctx.stroke();
-        } else {
-          ctx.strokeStyle = cDark; ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI*2); ctx.stroke();
+  canvas.addEventListener('mousedown', flap);
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    // Pilares
+    ctx.fillStyle = '#00f0ff';
+    pipes.forEach(p => {
+      ctx.fillRect(p.x, 0, 26, p.gapY - 50);
+      ctx.fillRect(p.x, p.gapY + 50, 26, H - (p.gapY + 50));
+    });
+    // Cubo
+    ctx.fillStyle = '#ff2a85';
+    ctx.fillRect(50, cubeY, 20, 20);
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '12px Space Grotesk';
+    ctx.fillText('Puntaje: ' + score, 8, 18);
+  }
+
+  function step() {
+    frame++;
+    vy += 0.36;
+    cubeY += vy;
+    if (frame % 90 === 0) {
+      pipes.push({ x: W, gapY: Math.random() * (H - 200) + 100, passed: false });
+    }
+    pipes.forEach(p => p.x -= 2.8);
+    pipes = pipes.filter(p => p.x > -30);
+    pipes.forEach(p => {
+      if (!p.passed && p.x < 50) {
+        p.passed = true;
+        score++;
+        document.getElementById('flappyScore').textContent = score;
+      }
+      if (p.x < 74 && p.x + 26 > 50) {
+        if (cubeY < p.gapY - 50 || cubeY + 20 > p.gapY + 50) endGame();
+      }
+    });
+    if (cubeY < 0 || cubeY + 20 > H) endGame();
+    draw();
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(loop);
+    if (score > record) {
+      record = score;
+      document.getElementById('flappyRecord').textContent = record;
+    }
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIN DEL JUEGO · PUNTAJE: ' + score, W / 2, H / 2);
+    ctx.textAlign = 'left';
+  }
+
+  document.getElementById('flappyPlay').addEventListener('click', () => {
+    cubeY = H / 2;
+    vy = 0;
+    pipes = [];
+    score = 0;
+    frame = 0;
+    running = true;
+    document.getElementById('flappyScore').textContent = 0;
+    clearInterval(loop);
+    loop = setInterval(step, 20);
+  });
+  draw();
+})();
+
+/* ---- GAME 7: NAVE ESPACIAL (SHOOTER) ---- */
+(function() {
+  const canvas = document.getElementById('shooterCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let shipX = W / 2, bullets = [], enemies = [], score = 0, record = 0, loop, running = false, frame = 0;
+  const keys = {};
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'a' || e.key === 'd' || e.key === 'A' || e.key === 'D') keys[e.key] = true;
+    if (e.key === ' ' && running) {
+      e.preventDefault();
+      bullets.push({ x: shipX, y: H - 34 });
+    }
+  });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+  canvas.addEventListener('mousedown', () => {
+    if (running) bullets.push({ x: shipX, y: H - 34 });
+  });
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    // Nave
+    ctx.fillStyle = '#00f0ff';
+    ctx.beginPath();
+    ctx.moveTo(shipX, H - 36);
+    ctx.lineTo(shipX - 16, H - 12);
+    ctx.lineTo(shipX + 16, H - 12);
+    ctx.closePath();
+    ctx.fill();
+    // Propulsor Neón
+    ctx.fillStyle = '#ff2a85';
+    ctx.fillRect(shipX - 4, H - 10, 8, 5);
+
+    // Disparos
+    ctx.fillStyle = '#00f0ff';
+    bullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+
+    // Enemigos
+    ctx.fillStyle = '#ff2a85';
+    enemies.forEach(en => {
+      ctx.beginPath();
+      ctx.arc(en.x, en.y, en.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '12px Space Grotesk';
+    ctx.fillText('Puntaje: ' + score, 8, 18);
+  }
+
+  function step() {
+    frame++;
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) shipX = Math.max(18, shipX - 5.5);
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) shipX = Math.min(W - 18, shipX + 5.5);
+
+    bullets.forEach(b => b.y -= 7);
+    bullets = bullets.filter(b => b.y > -10);
+
+    if (frame % 45 === 0) {
+      enemies.push({ x: Math.random() * (W - 40) + 20, y: -10, r: 12, vy: Math.random() * 1.5 + 1.8 });
+    }
+    enemies.forEach(en => en.y += en.vy);
+
+    // Colisiones
+    enemies.forEach((en, ei) => {
+      bullets.forEach((b, bi) => {
+        const dist = Math.hypot(en.x - b.x, en.y - b.y);
+        if (dist < en.r + 4) {
+          enemies.splice(ei, 1);
+          bullets.splice(bi, 1);
+          score += 10;
+          document.getElementById('shooterScore').textContent = score;
         }
-      } else if(ttt.active && ttt.hover === i) {
-        ctx.globalAlpha = 0.2; ctx.lineWidth = 10;
-        if(ttt.turn==="X") { ctx.strokeStyle = cAccent; ctx.beginPath(); ctx.moveTo(x-22, y-22); ctx.lineTo(x+22, y+22); ctx.moveTo(x+22, y-22); ctx.lineTo(x-22, y+22); ctx.stroke(); }
-        else { ctx.strokeStyle = cDark; ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI*2); ctx.stroke(); }
-        ctx.globalAlpha = 1;
-      }
-    }
-    if(ttt.winLine) {
-      ctx.strokeStyle = cBg; ctx.lineWidth = 14; ctx.globalAlpha = 0.9;
-      ctx.beginPath(); ctx.moveTo((ttt.winLine[0]%3)*93+46, Math.floor(ttt.winLine[0]/3)*93+46); ctx.lineTo((ttt.winLine[2]%3)*93+46, Math.floor(ttt.winLine[2]/3)*93+46); ctx.stroke(); ctx.globalAlpha = 1;
-    } else if(!ttt.active && ttt.board.includes("X")) {
-      ctx.fillStyle = "rgba(5, 26, 10, 0.7)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 24px Arial"; ctx.textAlign="center"; ctx.fillText("¡Empate!", 140, 140);
-    }
+      });
+    });
+
+    enemies.forEach(en => {
+      if (en.y + en.r >= H - 16 && Math.abs(en.x - shipX) < en.r + 14) endGame();
+      if (en.y > H + 20) endGame();
+    });
+    draw();
   }
 
-  let pong = { active: false, req: null, ball: {}, p1: {}, p2: {}, parts: [], shake: 0 };
-  function initPong() {
-    cancelAnimationFrame(pong.req);
-    pong = { active: true, ball: {x:140, y:140, vx:3.5, vy:3.5, size:8, trail:[]}, p1: {y:100, score:0}, p2: {y:100, score:0}, parts: [], shake: 0 };
-    requestAnimationFrame(pongLoop);
-  }
-  function pongLoop() {
-    if(!pong.active) return;
-    pong.req = requestAnimationFrame(pongLoop);
-    const ctx = document.getElementById("pongCanvas").getContext("2d");
-    
-    if(keys["w"] && pong.p1.y>0) pong.p1.y-=7;
-    if(keys["s"] && pong.p1.y<200) pong.p1.y+=7;
-    
-    pong.ball.trail.push({x: pong.ball.x, y: pong.ball.y});
-    if(pong.ball.trail.length>5) pong.ball.trail.shift();
-    
-    pong.ball.x += pong.ball.vx; pong.ball.y += pong.ball.vy;
-    if(pong.ball.y<=8 || pong.ball.y>=272) { pong.ball.vy*=-1; pong.shake = 3; }
-    
-    let target = pong.ball.y - 40;
-    pong.p2.y += (target - pong.p2.y) * 0.1;
-    if(pong.p2.y<0) pong.p2.y=0; if(pong.p2.y>200) pong.p2.y=200;
-    
-    if(pong.ball.x<=22 && pong.ball.y>=pong.p1.y-8 && pong.ball.y<=pong.p1.y+88) { 
-      pong.ball.vx = Math.abs(pong.ball.vx)*1.02; pong.ball.x=22; pong.shake=4; 
-      for(let i=0;i<8;i++) pong.parts.push({x:22,y:pong.ball.y,vx:Math.random()*4,vy:(Math.random()-0.5)*4,life:1});
+  function endGame() {
+    running = false;
+    clearInterval(loop);
+    if (score > record) {
+      record = score;
+      document.getElementById('shooterRecord').textContent = record;
     }
-    if(pong.ball.x>=258 && pong.ball.y>=pong.p2.y-8 && pong.ball.y<=pong.p2.y+88) { 
-      pong.ball.vx = -Math.abs(pong.ball.vx)*1.02; pong.ball.x=258; pong.shake=4; 
-      for(let i=0;i<8;i++) pong.parts.push({x:258,y:pong.ball.y,vx:-Math.random()*4,vy:(Math.random()-0.5)*4,life:1});
-    }
-    
-    if(pong.ball.x < -20 || pong.ball.x > 300) {
-      if(pong.ball.x < -20) pong.p2.score++; else pong.p1.score++;
-      pong.ball.x=140; pong.ball.y=140; pong.ball.vx = pong.ball.x<0? 3.5 : -3.5; pong.ball.vy=3.5; pong.ball.trail=[]; pong.shake=10;
-    }
-    
-    ctx.save();
-    if(pong.shake>0) { ctx.translate((Math.random()-0.5)*pong.shake, (Math.random()-0.5)*pong.shake); pong.shake-=0.5; }
-    ctx.clearRect(-10,-10,300,300);
-    
-    ctx.strokeStyle = cPanel; ctx.lineWidth = 4; ctx.setLineDash([15, 15]); ctx.beginPath(); ctx.moveTo(140,0); ctx.lineTo(140,280); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = cPanel; ctx.font = "bold 60px Arial"; ctx.textAlign="center"; ctx.fillText(pong.p1.score, 70, 70); ctx.fillText(pong.p2.score, 210, 70);
-    
-    ctx.fillStyle = cDark;
-    for(let i=0; i<pong.ball.trail.length; i++) {
-      ctx.globalAlpha = (i+1)/pong.ball.trail.length * 0.4;
-      ctx.beginPath(); ctx.arc(pong.ball.trail[i].x, pong.ball.trail[i].y, pong.ball.size*(i+1)/pong.ball.trail.length, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    
-    ctx.beginPath(); ctx.roundRect(10, pong.p1.y, 12, 80, 6); ctx.fill();
-    ctx.fillStyle = cAccent; ctx.beginPath(); ctx.roundRect(258, pong.p2.y, 12, 80, 6); ctx.fill();
-    ctx.fillStyle = cDark; ctx.beginPath(); ctx.arc(pong.ball.x, pong.ball.y, pong.ball.size, 0, Math.PI*2); ctx.fill();
-    
-    for(let i=pong.parts.length-1; i>=0; i--) {
-      let p = pong.parts[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-      if(p.life<=0) { pong.parts.splice(i,1); continue; }
-      ctx.globalAlpha = p.life; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.restore();
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('¡NAVE DERRIBADA! · ' + score, W / 2, H / 2);
+    ctx.textAlign = 'left';
   }
 
-  let catchHS = localStorage.getItem('catchHS') || 0;
-  if(document.getElementById('catchRecord')) document.getElementById('catchRecord').innerText = catchHS;
-  let ctc = { active: false, req: null, basket: {x: 100, width: 80, angle: 0}, fruits: [], score: 0, lives: 3, ticks: 0, parts: [], timeLeft: 30, startTime: 0, diff: 1.5 };
-  
-  function initCatch() {
-    cancelAnimationFrame(ctc.req);
-    let diff = 1.5;
-    if(document.getElementById('catchDiff')) diff = parseFloat(document.getElementById('catchDiff').value);
-    ctc = { active: true, basket: {x: 100, width: 80, angle: 0}, fruits: [], score: 0, lives: 3, ticks: 0, parts: [], timeLeft: 30, startTime: performance.now(), diff: diff };
-    requestAnimationFrame(catchLoop);
-  }
-  function catchLoop(time) {
-    if(!ctc.active) return;
-    ctc.req = requestAnimationFrame(catchLoop);
-    const ctx = document.getElementById("catchCanvas").getContext("2d");
-    
-    ctc.timeLeft = Math.max(0, 30 - Math.floor((time - ctc.startTime)/1000));
-    
-    if(ctc.lives <= 0 || ctc.timeLeft <= 0) {
-      ctc.active = false;
-      if(ctc.score > catchHS) { catchHS = ctc.score; localStorage.setItem('catchHS', catchHS); document.getElementById('catchRecord').innerText = catchHS; }
-      ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 26px Arial"; ctx.textAlign="center";
-      ctx.fillText(ctc.timeLeft <= 0 ? "¡Tiempo!" : "¡Juego Terminado!", 140, 120); 
-      ctx.font = "16px Arial"; ctx.fillText("Puntos: " + ctc.score, 140, 150);
-      return;
-    }
-    
-    ctc.basket.angle = 0;
-    if(keys["ArrowLeft"] && ctc.basket.x>0) { ctc.basket.x-=8; ctc.basket.angle = -0.1; }
-    if(keys["ArrowRight"] && ctc.basket.x<280-ctc.basket.width) { ctc.basket.x+=8; ctc.basket.angle = 0.1; }
-    
-    ctc.ticks++;
-    // spawn faster based on difficulty
-    if(ctc.ticks % Math.max(20, Math.floor(60 / ctc.diff) - Math.floor(ctc.score/3)) === 0) {
-      ctc.fruits.push({x: 20 + Math.random()*240, y: -20, rot: 0, vrot: (Math.random()-0.5)*0.15, type: Math.random()>0.4?1:2});
-    }
-    
-    ctx.clearRect(0,0,280,280);
-    
-    for(let i=ctc.fruits.length-1; i>=0; i--) {
-      let f = ctc.fruits[i];
-      f.y += (2.5 + (ctc.score*0.05)) * ctc.diff; f.rot += f.vrot;
-      
-      ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot);
-      // Frutas más pequeñas para mayor dificultad (radio 8 y 7 en vez de 14 y 12)
-      if(f.type===1) {
-        ctx.fillStyle = cAccent; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = cDark; ctx.beginPath(); ctx.roundRect(-1, -11, 2, 5, 1); ctx.fill(); 
-      } else {
-        ctx.fillStyle = cPanel; ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI*2); ctx.fill();
-      }
-      ctx.restore();
-      
-      if(f.y > 245 && f.y < 265 && f.x > ctc.basket.x-10 && f.x < ctc.basket.x+ctc.basket.width+10) {
-        ctc.score += (f.type===1? 10 : 5); 
-        for(let j=0;j<10;j++) ctc.parts.push({x:f.x, y:f.y, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6, life:1, col: f.type===1?cAccent:cPanel});
-        ctc.fruits.splice(i, 1);
-      } else if(f.y > 290) {
-        ctc.fruits.splice(i, 1); ctc.lives--;
-      }
-    }
-    
-    ctx.save();
-    ctx.translate(ctc.basket.x + ctc.basket.width/2, 260);
-    ctx.rotate(ctc.basket.angle);
-    ctx.fillStyle = cDark; ctx.beginPath(); ctx.arc(0, 0, ctc.basket.width/2, 0, Math.PI); ctx.fill();
-    ctx.fillStyle = cBg; ctx.beginPath(); ctx.arc(0, 0, ctc.basket.width/2 - 6, 0, Math.PI); ctx.fill();
-    ctx.restore();
-    
-    for(let i=ctc.parts.length-1; i>=0; i--) {
-      let p = ctc.parts[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-      if(p.life<=0) { ctc.parts.splice(i,1); continue; }
-      ctx.globalAlpha = p.life; ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    
-    ctx.fillStyle = cDark; ctx.font = "bold 18px Arial"; ctx.textAlign="left"; ctx.fillText("Puntos: " + ctc.score, 10, 25);
-    ctx.textAlign="right";
-    let livesText = ""; for(let i=0; i<ctc.lives; i++) livesText+="♥ ";
-    ctx.fillStyle = cAccent; ctx.fillText(livesText, 270, 25);
-  }
-
-  let brk = { active: false, req: null, paddle: {x: 100, width: 60}, ball: {x:140, y:200, vx: 3, vy: -3, size: 5}, bricks: [], score: 0, parts: [] };
-  function initBrick() {
-    cancelAnimationFrame(brk.req);
-    let bricks = [];
-    for(let r=0; r<4; r++) {
-      for(let c=0; c<6; c++) {
-        bricks.push({x: 12 + c*43, y: 30 + r*20, w: 40, h: 14, active: true});
-      }
-    }
-    brk = { active: true, paddle: {x: 110, width: 60}, ball: {x:140, y:200, vx: 3.5, vy: -3.5, size: 5}, bricks: bricks, score: 0, parts: [] };
-    requestAnimationFrame(brickLoop);
-  }
-  function brickLoop() {
-    if(!brk.active) return;
-    brk.req = requestAnimationFrame(brickLoop);
-    const ctx = document.getElementById("brickCanvas").getContext("2d");
-    
-    if(keys["ArrowLeft"] && brk.paddle.x>0) brk.paddle.x-=6;
-    if(keys["ArrowRight"] && brk.paddle.x<280-brk.paddle.width) brk.paddle.x+=6;
-    
-    brk.ball.x += brk.ball.vx; brk.ball.y += brk.ball.vy;
-    
-    if(brk.ball.x<=0 || brk.ball.x>=280) brk.ball.vx*=-1;
-    if(brk.ball.y<=0) brk.ball.vy*=-1;
-    
-    if(brk.ball.y>=280) {
-      brk.active = false;
-      ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 24px Arial"; ctx.textAlign="center"; ctx.fillText("¡Perdiste!", 140, 130);
-      return;
-    }
-    
-    if(brk.ball.y+brk.ball.size >= 260 && brk.ball.y <= 270 && brk.ball.x >= brk.paddle.x && brk.ball.x <= brk.paddle.x+brk.paddle.width) {
-      brk.ball.vy *= -1;
-      let hitPoint = (brk.ball.x - (brk.paddle.x + brk.paddle.width/2)) / (brk.paddle.width/2);
-      brk.ball.vx = hitPoint * 4;
-      brk.ball.y = 260 - brk.ball.size;
-    }
-    
-    ctx.clearRect(0,0,280,280);
-    
-    ctx.fillStyle = cAccent;
-    let win = true;
-    for(let i=0; i<brk.bricks.length; i++) {
-      let b = brk.bricks[i];
-      if(b.active) {
-        win = false;
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        if(brk.ball.x > b.x && brk.ball.x < b.x+b.w && brk.ball.y > b.y && brk.ball.y < b.y+b.h) {
-          b.active = false; brk.ball.vy *= -1; brk.score+=10;
-          for(let j=0;j<8;j++) brk.parts.push({x:b.x+b.w/2, y:b.y+b.h/2, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:1});
-        }
-      }
-    }
-    
-    if(win) {
-      brk.active = false;
-      ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 24px Arial"; ctx.textAlign="center"; ctx.fillText("¡Ganaste!", 140, 130);
-      return;
-    }
-    
-    ctx.fillStyle = cDark; ctx.beginPath(); ctx.roundRect(brk.paddle.x, 260, brk.paddle.width, 10, 4); ctx.fill();
-    ctx.beginPath(); ctx.arc(brk.ball.x, brk.ball.y, brk.ball.size, 0, Math.PI*2); ctx.fill();
-    
-    for(let i=brk.parts.length-1; i>=0; i--) {
-      let p = brk.parts[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-      if(p.life<=0) { brk.parts.splice(i,1); continue; }
-      ctx.globalAlpha = p.life; ctx.fillStyle = cAccent; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    ctx.font = "bold 16px Arial"; ctx.textAlign="left"; ctx.fillText("Puntos: " + brk.score, 10, 20);
-  }
-
-  let flap = { active: false, req: null, y: 140, vy: 0, pipes: [], score: 0, ticks: 0, parts: [] };
-  function initFlappy() {
-    cancelAnimationFrame(flap.req);
-    flap = { active: true, y: 140, vy: -5, pipes: [], score: 0, ticks: 0, parts: [] };
-    requestAnimationFrame(flappyLoop);
-  }
-  window.addEventListener("keydown", e => {
-    if(flap.active && (e.key==="ArrowUp" || e.key==="w" || e.key===" ")) {
-      flap.vy = -6.5; 
-      for(let i=0;i<5;i++) flap.parts.push({x:60, y:flap.y+10, vx:-1-Math.random()*2, vy:(Math.random()-0.5)*2, life:1});
-    }
+  document.getElementById('shooterPlay').addEventListener('click', () => {
+    shipX = W / 2;
+    bullets = [];
+    enemies = [];
+    score = 0;
+    frame = 0;
+    running = true;
+    document.getElementById('shooterScore').textContent = 0;
+    clearInterval(loop);
+    loop = setInterval(step, 20);
   });
-  function flappyLoop() {
-    if(!flap.active) return;
-    flap.req = requestAnimationFrame(flappyLoop);
-    const ctx = document.getElementById("flappyCanvas").getContext("2d");
-    
-    flap.vy += 0.35;
-    flap.y += flap.vy;
-    flap.ticks++;
-    
-    if(flap.ticks % 100 === 0) {
-      let gap = 85 - Math.min(flap.score*2, 30);
-      let yTop = 30 + Math.random()*(220 - gap - 60);
-      flap.pipes.push({x: 280, w: 40, top: yTop, gap: gap, passed: false});
-    }
-    
-    if(flap.y > 280 || flap.y < -20) {
-      flap.active = false;
-      ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 24px Arial"; ctx.textAlign="center"; ctx.fillText("¡Caíste!", 140, 130);
-      return;
-    }
-    
-    ctx.clearRect(0,0,280,280);
-    
-    ctx.fillStyle = cPanel; ctx.globalAlpha = 0.2;
-    for(let i=0; i<5; i++) {
-      ctx.beginPath(); ctx.arc((flap.ticks*0.5 + i*80)%360 - 40, 50 + Math.sin(i)*40, 20+i*10, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    
-    ctx.fillStyle = cPanel;
-    for(let i=flap.pipes.length-1; i>=0; i--) {
-      let p = flap.pipes[i];
-      p.x -= 2.5;
-      
-      ctx.fillRect(p.x, 0, p.w, p.top);
-      ctx.fillRect(p.x-4, p.top-15, p.w+8, 15);
-      
-      ctx.fillRect(p.x, p.top + p.gap, p.w, 280 - (p.top + p.gap));
-      ctx.fillRect(p.x-4, p.top + p.gap, p.w+8, 15);
-      
-      if(60+16 > p.x && 60 < p.x+p.w) {
-        if(flap.y < p.top || flap.y+16 > p.top+p.gap) {
-          flap.active = false;
-          ctx.fillStyle = "rgba(5, 26, 10, 0.85)"; ctx.fillRect(0,0,280,280);
-          ctx.fillStyle = cDark; ctx.font = "bold 24px Arial"; ctx.textAlign="center"; ctx.fillText("¡Choque!", 140, 130);
-          return;
-        }
-      }
-      
-      if(p.x < 60 && !p.passed) { p.passed = true; flap.score++; }
-      if(p.x < -p.w) flap.pipes.splice(i, 1);
-    }
-    
-    for(let i=flap.parts.length-1; i>=0; i--) {
-      let p = flap.parts[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
-      if(p.life<=0) { flap.parts.splice(i,1); continue; }
-      ctx.globalAlpha = p.life; ctx.fillStyle = cAccent; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    
-    ctx.save();
-    ctx.translate(68, flap.y+8);
-    ctx.rotate(Math.min(Math.PI/4, Math.max(-Math.PI/4, flap.vy * 0.1)));
-    ctx.fillStyle = cAccent; ctx.beginPath(); ctx.roundRect(-12, -10, 24, 20, 4); ctx.fill();
-    ctx.fillStyle = cBg; ctx.beginPath(); ctx.arc(4, -2, 3, 0, Math.PI*2); ctx.fill(); 
-    ctx.restore();
-    
-    ctx.fillStyle = cDark; ctx.font = "bold 20px Arial"; ctx.textAlign="left"; ctx.fillText(flap.score, 10, 25);
+  draw();
+})();
+
+/* ---- GAME 8: ESQUIVA METEOROS (RUNNER) ---- */
+(function() {
+  const canvas = document.getElementById('dodgeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  let playerX = W / 2, meteors = [], seconds = 0, record = 0, loop, running = false, frame = 0, speedMult = 1;
+  const keys = {};
+
+  document.querySelectorAll('[data-game="dodge"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-game="dodge"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const d = btn.dataset.diff;
+      speedMult = d === 'easy' ? 0.8 : (d === 'hard' ? 1.5 : 1);
+    });
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'a' || e.key === 'd' || e.key === 'A' || e.key === 'D') keys[e.key] = true;
+  });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+  function draw() {
+    ctx.fillStyle = '#04030a';
+    ctx.fillRect(0, 0, W, H);
+    // Jugador
+    ctx.fillStyle = '#00f0ff';
+    ctx.beginPath();
+    ctx.arc(playerX, H - 24, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff2a85';
+    ctx.beginPath();
+    ctx.arc(playerX, H - 24, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Meteoros con estela
+    meteors.forEach(m => {
+      ctx.fillStyle = '#ff2a85';
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255, 42, 133, 0.3)';
+      ctx.fillRect(m.x - m.r / 2, m.y - m.speed * 4, m.r, m.speed * 4);
+    });
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '12px Space Grotesk';
+    ctx.fillText('Supervivencia: ' + seconds + 's', 8, 18);
   }
 
-  ["snake","ttt","pong","catch","brick","flappy"].forEach(id => {
-    let el = document.getElementById(id+"Canvas");
-    if(el) {
-      let ctx = el.getContext("2d");
-      ctx.fillStyle = "rgba(5, 26, 10, 0.4)"; ctx.fillRect(0,0,280,280);
-      ctx.fillStyle = cDark; ctx.font = "bold 20px Arial"; ctx.textAlign="center"; ctx.fillText("Haz clic en Jugar", 140, 140);
+  function step() {
+    frame++;
+    if (frame % 50 === 0) {
+      seconds++;
+      document.getElementById('dodgeScore').textContent = seconds + 's';
     }
+
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) playerX = Math.max(14, playerX - 5.5);
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) playerX = Math.min(W - 14, playerX + 5.5);
+
+    const spawnRate = Math.max(16, Math.floor(34 / speedMult));
+    if (frame % spawnRate === 0) {
+      meteors.push({
+        x: Math.random() * (W - 20) + 10,
+        y: -15,
+        r: Math.random() * 8 + 7,
+        speed: (Math.random() * 2.2 + 2.4) * speedMult
+      });
+    }
+
+    meteors.forEach(m => m.y += m.speed);
+    meteors = meteors.filter(m => m.y < H + 25);
+
+    meteors.forEach(m => {
+      const dist = Math.hypot(m.x - playerX, m.y - (H - 24));
+      if (dist < m.r + 12) endGame();
+    });
+    draw();
+  }
+
+  function endGame() {
+    running = false;
+    clearInterval(loop);
+    if (seconds > record) {
+      record = seconds;
+      document.getElementById('dodgeRecord').textContent = record + 's';
+    }
+    ctx.fillStyle = 'rgba(4, 3, 10, 0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('¡COLISIÓN! TIEMPO: ' + seconds + 's', W / 2, H / 2);
+    ctx.textAlign = 'left';
+  }
+
+  document.getElementById('dodgePlay').addEventListener('click', () => {
+    playerX = W / 2;
+    meteors = [];
+    seconds = 0;
+    frame = 0;
+    running = true;
+    document.getElementById('dodgeScore').textContent = '0s';
+    clearInterval(loop);
+    loop = setInterval(step, 20);
   });
+  draw();
+})();
+
+/* ---------- 8. FORMULARIO DE CONTACTO ---------- */
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById('formMsg');
+  msgEl.textContent = '¡Transmisión recibida con éxito! Nuestro equipo responderá en breve.';
+  gsap.from(msgEl, { opacity: 0, y: -8, duration: 0.4 });
+  this.reset();
+});
 </script>
+
 </body>
 </html>
